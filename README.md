@@ -3,6 +3,7 @@
 Repositório do Projeto Final da disciplina de Teleinformática e Redes 1 da Universidade de Brasília, semestre 2019.1, professor Geraldo.
 
 * Membros
+
 | Nome            | Matrícula  |
 |-----------------|------------|
 | Carlos André    | 16/0115663 |
@@ -12,5 +13,8 @@ Repositório do Projeto Final da disciplina de Teleinformática e Redes 1 da Uni
 | Vitor Ribas     | 16/0148421 |
 
 * Descrição
+
+
 * Instruções de compilação
+
 * Instruções de uso

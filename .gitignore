@@ -1,3 +1,18 @@
+# Project environment files:
+.idea
+.vscode
+
+# CMake folders and files
+cmake-build-debug
+CMakeFiles
+build-debug
+build-release
+cmake_install.cmake
+CMakeCache.txt
+*.cbp
+Makefile
+
+
 # Prerequisites
 *.d
 
