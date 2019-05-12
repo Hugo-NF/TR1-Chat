@@ -1,8 +1,3 @@
-// Compiler includes
-#include <signal.h>
-#include <stdlib.h>
-#include <unistd.h>
-
 // Project includes
 #include "client.h"
 #include "console.h"

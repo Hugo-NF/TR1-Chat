@@ -1,7 +1,3 @@
-// Compiler includes
-#include <sqlite3.h>
-#include <server.h>
-
 // Project includes
 #include "console.h"
 #include "server.h"
