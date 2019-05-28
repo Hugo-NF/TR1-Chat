@@ -1,10 +1,10 @@
-# Teleinformática e Redes 1 - Projeto de Disciplina
+# TR1 - Final Project
 
-Repositório do Projeto Final da disciplina de Teleinformática e Redes 1 da Universidade de Brasília, semestre 2019.1, professor Geraldo.
+Final project repository of the Teleinformatics and Networks 1 discipline at University of Brasilia, 2019.1, professor Dr. Geraldo P. Rocha Filho 
 
-* Membros
+###Team members
 
-| Nome            | Matrícula  |
+| Name            | Reg.       |
 |-----------------|------------|
 | Carlos André    | 16/0115663 |
 | Hugo N. Fonseca | 16/0008166 |
@@ -12,9 +12,13 @@ Repositório do Projeto Final da disciplina de Teleinformática e Redes 1 da Uni
 | Pedro Augusto   | 16/0141044 |
 | Vitor Ribas     | 16/0148421 |
 
-* Descrição
+### Description<br>
+An asynchronous chat application with one multi-threaded server and multiple clients using Python sockets. 
 
 
-* Instruções de compilação
+### Dependencies
+    1.  Python 3.6.7 or higher
+    2.  PyQt5 ---
+    3.  Sqlite3 --- 
 
-* Instruções de uso
+### Features and usage

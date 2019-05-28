@@ -6,7 +6,7 @@ from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread
 
 class Server:
-    """Implements a multithreaded server for a asynchronous chat application"""
+    """Implements a multi-threaded server for a asynchronous chat application"""
 
     buffer_size = 1024
 
