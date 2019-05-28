@@ -8,6 +8,8 @@ from threading import Thread
 class Client:
     """Handles the communication with the server application"""
 
+    buffer_size = 1024
+
     def __init__(self, host, port):
         self.conn_host = host
         self.conn_port = port
