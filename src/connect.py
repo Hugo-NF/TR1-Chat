@@ -6,8 +6,10 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt5 import QtCore, QtGui, QtWidgets
 import time
+from threading import Thread
+
+from PyQt5 import QtCore, QtWidgets
 
 class Ui_connectionDialog(object):
     def setupUi(self, connectionDialog):
@@ -50,12 +52,16 @@ class Ui_connectionDialog(object):
         self.progressLayout.setObjectName("progressLayout")
         self.connectionProgress = QtWidgets.QProgressBar(connectionDialog)
         self.connectionProgress.setProperty("value", 0)
+        self.connectionProgress.setFormat("")
+        self.connectionProgress.hide()
         self.connectionProgress.setObjectName("connectionProgress")
         self.progressLayout.addWidget(self.connectionProgress)
         self.horizontalLayout_3.addLayout(self.progressLayout)
         self.connectButton = QtWidgets.QPushButton(connectionDialog)
         self.connectButton.setObjectName("connectButton")
         self.horizontalLayout_3.addWidget(self.connectButton)
+
+        self.animationThread = Thread(target=self.conn_animate)
 
         self.retranslateUi(connectionDialog)
         QtCore.QMetaObject.connectSlotsByName(connectionDialog)
@@ -69,21 +75,30 @@ class Ui_connectionDialog(object):
         self.portEdit.setPlaceholderText(_translate("connectionDialog", "8080"))
         self.tcpRadioButton.setText(_translate("connectionDialog", "TCP"))
         self.udpRadioButton.setText(_translate("connectionDialog", "UDP"))
-        self.connectionProgress.setFormat(_translate("connectionDialog", "Disconnected"))
         self.connectButton.setText(_translate("connectionDialog", "Connect"))
 
-    def connect_animation(self):
+    def conn_animate(self):
         self.connectionProgress.show()
-        self.connectionProgress.setFormat("Connecting...")
 
         for i in range(30):
             self.connectionProgress.setInvertedAppearance(False)
-            for value in range(0,101):
-                time.sleep(1)
+            for value in range(0,101, 10):
+                time.sleep(0.05)
                 self.connectionProgress.setValue(value)
             self.connectionProgress.setInvertedAppearance(True)
-            for value in range(101, -1, -1):
-                time.sleep(1)
+            for value in range(101, -1, -10):
+                time.sleep(0.05)
                 self.connectionProgress.setValue(value)
 
+    def start_animation(self):
+        self.animationThread.start()
 
+    def stop_animation(self, connect):
+        if self.animationThread.isAlive():
+            self.animationThread.join(1)
+            self.connectionProgress.setInvertedAppearance(False)
+            self.connectionProgress.setValue(100)
+            if connect:
+                self.connectionProgress.setFormat("Connected")
+            else:
+                self.connectionProgress.setFormat("Failed")

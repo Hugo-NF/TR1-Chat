@@ -1,31 +1,36 @@
 import sys
 
-# Python built-ins
-from threading import Thread
-
 # PyQt framework
 from PyQt5.QtWidgets import QApplication, QMainWindow, QDialog
 
 # Created Qt interfaces
 from src.mainwindow import Ui_MainWindow
 from src.connect import Ui_connectionDialog
+from src.rooms import Ui_roomsDialog
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    app.setApplicationDisplayName("Concord")
+    app.setApplicationName("Concord")
 
     main_window = QMainWindow()
     conn_dialog = QDialog(main_window)
+    rooms_dialog = QDialog(main_window)
 
     main_ui = Ui_MainWindow()
     conn_ui = Ui_connectionDialog()
+    rooms_ui = Ui_roomsDialog()
 
     # Draw the window
     main_ui.setupUi(main_window)
     conn_ui.setupUi(conn_dialog)
+    rooms_ui.setupUi(rooms_dialog)
 
     # Application initial configuration
     main_ui.commandLinkButton.clicked.connect(conn_dialog.show)
-    conn_ui.connectButton.clicked.connect(conn_ui.connect_animation)
+    main_ui.commandLinkButton_2.clicked.connect(rooms_dialog.show)
+
+    conn_ui.connectButton.clicked.connect(conn_ui.start_animation)
 
     # Application starting size
     main_window.resize(1024, 768)

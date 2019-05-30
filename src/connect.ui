@@ -83,7 +83,7 @@
         <number>0</number>
        </property>
        <property name="format">
-        <string>Disconnected</string>
+        <string/>
        </property>
       </widget>
      </item>
