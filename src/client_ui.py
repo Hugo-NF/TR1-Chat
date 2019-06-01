@@ -27,10 +27,12 @@ if __name__ == "__main__":
     rooms_ui.setupUi(rooms_dialog)
 
     # Application initial configuration
-    main_ui.commandLinkButton.clicked.connect(conn_dialog.show)
-    main_ui.commandLinkButton_2.clicked.connect(rooms_dialog.show)
+    main_ui.connectionButton.clicked.connect(conn_dialog.show)
+    main_ui.roomsButton.clicked.connect(rooms_dialog.show)
 
     conn_ui.connectButton.clicked.connect(conn_ui.start_animation)
+
+
 
     # Application starting size
     main_window.resize(1024, 768)

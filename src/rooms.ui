@@ -75,15 +75,15 @@
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="groupBox">
+        <widget class="QGroupBox" name="roomCreateFrame">
          <property name="title">
           <string>Create a room</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_4">
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout">
+           <layout class="QHBoxLayout" name="roomCreateLayout">
             <item>
-             <widget class="QLabel" name="label">
+             <widget class="QLabel" name="roomNameLabel">
               <property name="text">
                <string>Name:</string>
               </property>
@@ -106,7 +106,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QGroupBox" name="groupBox_2">
+     <widget class="QGroupBox" name="onlineFrame">
       <property name="title">
        <string>Online</string>
       </property>

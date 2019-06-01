@@ -21,14 +21,14 @@
     <item>
      <widget class="QCommandLinkButton" name="connectionButton">
       <property name="text">
-       <string>Connection Properties</string>
+       <string>Connection</string>
       </property>
      </widget>
     </item>
     <item>
      <widget class="QCommandLinkButton" name="roomsButton">
       <property name="text">
-       <string>Manage Rooms</string>
+       <string>Rooms</string>
       </property>
      </widget>
     </item>
@@ -47,7 +47,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="">
+      <widget class="QWidget" name="layoutWidget">
        <layout class="QHBoxLayout" name="messageBoxLayout">
         <item>
          <widget class="QTextEdit" name="messageEdit"/>
@@ -95,7 +95,6 @@
     <property name="title">
      <string>Options</string>
     </property>
-    <addaction name="actionAbout"/>
     <addaction name="actionAbout_Qt"/>
     <addaction name="actionQuit"/>
    </widget>
