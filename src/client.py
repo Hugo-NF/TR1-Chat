@@ -23,5 +23,10 @@ class Client:
     def connect(self):
         self.socket.connect(self.conn_address)
 
+    def set_host(self, host):
+        self.conn_host = host
+        self.conn_address = (self.conn_host, self.conn_port)
 
-client = Client("localhost", 8080)
+    def set_port(self, port):
+        self.conn_port = port
+        self.conn_address = (self.conn_host, self.conn_port)

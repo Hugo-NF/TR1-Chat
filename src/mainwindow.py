@@ -91,13 +91,11 @@ class Ui_MainWindow(object):
         self.actionAbout.setText(_translate("MainWindow", "About"))
         self.actionAbout_Qt.setText(_translate("MainWindow", "About Qt"))
 
-
     def write_message(self, username, msg_text):
-        self.textViewer.insertPlainText(("\n[{username}]: {msg_text}").format(username=username, msg_text=msg_text))
+        self.textViewer.insertPlainText("\n[{username}]: {msg_text}".format(username=username, msg_text=msg_text))
 
     def clear_message_box(self):
         self.messageEdit.clear()
 
     def read_message_box(self):
         return self.messageEdit.toPlainText()
-    
