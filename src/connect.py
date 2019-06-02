@@ -91,7 +91,8 @@ class Ui_connectionDialog(object):
                 self.connectionProgress.setValue(value)
 
     def start_animation(self):
-        self.animationThread.start()
+        if not self.animationThread.isAlive():
+            self.animationThread.start()
 
     def stop_animation(self, connect):
         if self.animationThread.isAlive():

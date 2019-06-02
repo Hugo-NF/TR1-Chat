@@ -27,20 +27,17 @@ if __name__ == "__main__":
     rooms_ui.setupUi(rooms_dialog)
 
     # Application initial configuration
+    # main_ui.roomsButton.hide()
     main_ui.connectionButton.clicked.connect(conn_dialog.show)
     main_ui.roomsButton.clicked.connect(rooms_dialog.show)
 
     conn_ui.connectButton.clicked.connect(conn_ui.start_animation)
 
 
-
-    # Application starting size
+    # Application initial size
     main_window.resize(1024, 768)
 
     # Show screen to user
     main_window.show()
-
-
-
 
     sys.exit(app.exec_())
