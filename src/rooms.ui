@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>785</width>
-    <height>437</height>
+    <width>626</width>
+    <height>364</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -138,45 +138,22 @@
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="joinRoomFrame">
-         <property name="title">
-          <string>Join a room</string>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_3">
-          <item>
-           <layout class="QHBoxLayout" name="nicknameLayout">
-            <item>
-             <widget class="QLabel" name="nicknameLabel">
-              <property name="text">
-               <string>Nickname:</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLineEdit" name="nicknameEdit"/>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="buttonsRoomLayout">
-            <item>
-             <widget class="QPushButton" name="leaveButton">
-              <property name="text">
-               <string>Leave</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="joinButton">
-              <property name="text">
-               <string>Join</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
+        <layout class="QHBoxLayout" name="buttonsRoomLayout">
+         <item>
+          <widget class="QPushButton" name="leaveButton">
+           <property name="text">
+            <string>Leave</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="joinButton">
+           <property name="text">
+            <string>Join</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </widget>
