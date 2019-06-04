@@ -2,7 +2,7 @@
 
 Final project repository of the Teleinformatics and Networks 1 discipline at University of Brasilia, 2019.1, professor Dr. Geraldo P. Rocha Filho 
 
-###Team members
+### Team members
 
 | Name            | Reg.       |
 |-----------------|------------|
@@ -18,7 +18,7 @@ An asynchronous chat application with one multi-threaded server and multiple cli
 
 ### Dependencies
     1.  Python 3.6.7 or higher
-    2.  PyQt5 ---
+    2.  PyQt5 5.10.1
     3.  Sqlite3 --- 
 
 ### Features and usage
