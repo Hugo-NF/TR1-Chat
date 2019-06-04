@@ -88,8 +88,11 @@
          </item>
          <item row="0" column="1">
           <widget class="QLineEdit" name="hostEdit">
-           <property name="placeholderText">
+           <property name="text">
             <string>127.0.0.1</string>
+           </property>
+           <property name="placeholderText">
+            <string/>
            </property>
           </widget>
          </item>
@@ -125,12 +128,15 @@
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="QLineEdit" name="portEdit">
-           <property name="text">
-            <string/>
+          <widget class="QSpinBox" name="portEdit">
+           <property name="minimum">
+            <number>1</number>
            </property>
-           <property name="placeholderText">
-            <string>8080</string>
+           <property name="maximum">
+            <number>65535</number>
+           </property>
+           <property name="value">
+            <number>8080</number>
            </property>
           </widget>
          </item>
