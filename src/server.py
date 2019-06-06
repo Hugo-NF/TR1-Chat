@@ -1,6 +1,6 @@
 # Server imports
 import traceback
-from socket import AF_INET, socket, SOCK_STREAM, SOCK_DGRAM     # Socket programming
+from socket import *                                            # Socket programming
 from threading import Thread                                    # Python Threads
 import re                                                       # Regular expressions
 import sys                                                      # System calls
@@ -18,9 +18,6 @@ class Server:
     # Path to server sqlite3 db (Will be created if doesn't exist)
     db_path = "../db/server"
 
-    # Flag to stop threads
-    run = True
-
     def __init__(self, ui_obj, host="127.0.0.1", port=8080, is_tcp=True, buffer_size=1024, backlog=10):
         # Data management
         self.clients = {}
@@ -29,55 +26,15 @@ class Server:
         # Regexp to easily switch between commands
         self.commands_re = re.compile("^\\\(quit|leave|join|rooms|online|create)(?:\s*{(.*)})?$", re.MULTILINE)
 
-        # Threads
-        self.listening_thread = Thread(target=self.listen)
-        self.client_threads = []
-
         # GUI object configuration
         self.ui_obj = ui_obj
         self._translate = QtCore.QCoreApplication.translate
         self.ui_obj.console("Welcome to Concord Server v.0.0.1\n"
-                            "This program is under GNU General Public License v3.0\n"
-                            "Authors: Hugo Nascimento Fonseca - 16/0008166\n")
-        # TODO: Adicionar os nomes dos demais do grupo
+                            "This program is under GNU General Public License v3.0\n")
+
         self.ui_obj.runButton.clicked.connect(self.start_server)
-
-    def listen(self):
-        """Listen to network and starts the handling of upcoming connections,
-        this is the target for dispatcher thread"""
-
-        while self.run:
-            client, client_address = self.socket.accept()
-            print("Connection established with {host}:{port}"
-                  .format(host=client_address[0], port=client_address[1]))
-
-            self.clients[client_address] = {'rooms': {}, 'connected': None, 'socket': client}
-
-            new_thread = Thread(target=self.handle_connection, args=(client_address, client, ))
-            self.client_threads.append(new_thread)
-            new_thread.start()
-
-        for thread in self.client_threads:
-            thread.join(5)
-
-
-    def handle_connection(self, address, socket):
-        """Handles a connection with one client, this is the target for each worker thread"""
-        message = socket.recv(self.buffer_size)
-        message_text = message.decode('UTF-8')
-
-        match = self.commands_re.match(message_text)
-        if match:
-            print("Placeholder: User issued a command")
-        else:
-            client_info = self.clients[address]
-            client_room = client_info['connected']
-            if client_room is None:
-                print("Placeholder: User must connected to a room before")
-            else:
-                print("Placeholder: broadcast message to all users in 'client_room' excepting the sender user")
-
-
+        self.ui_obj.stopButton.clicked.connect(self.stop_server)
+        self.ui_obj.stopButton.setDisabled(True)
 
     def start_server(self):
         """Initiates the server by binding it's address and starting dispatcher thread"""
@@ -88,26 +45,26 @@ class Server:
         self.buffer_size = self.ui_obj.buffEdit.value()
         self.backlog = self.ui_obj.backlogEdit.value()
         self.own_address = (self.host, self.port)
-        if self.ui_obj.tcpRadioButton.isChecked():
-            self.socket = socket(AF_INET, SOCK_STREAM)
-        else:
-            self.socket = socket(AF_INET, SOCK_DGRAM)
+        self.socket = socket(AF_INET, SOCK_STREAM if self.ui_obj.tcpRadioButton.isChecked() else SOCK_DGRAM)
+        self.socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 
-        # Bind the socket to address. The socket must not already be bound.
         try:
+            # Bind the socket to address. The socket must not already be bound.
             self.socket.bind(self.own_address)
             # Enable a server to accept connections.
             self.socket.listen(self.backlog)
 
-            self.run = True
+            # Adjust UI
+            self.ui_obj.console("Server is up and running! Waiting for connections...")
+            self.ui_obj.runButton.setDisabled(True)
+            self.ui_obj.stopButton.setDisabled(False)
+
+            # Threads
+            self.listening_thread = Thread(target=self.listen)
+            self.client_threads = []
             # From now on, we're allowed to receive connections
             self.listening_thread.start()
 
-            # Adjust UI
-            self.ui_obj.runButton.setText(self._translate("serverWindow", "Stop"))
-            self.ui_obj.runButton.disconnect()
-            self.ui_obj.runButton.clicked.connect(self.stop_server)
-            self.ui_obj.console("<span style=\" color: #0dd817;\">Server is up and running! Waiting for connections...<br></span>")
         except OSError:
             self.ui_obj.console("<span style=\" color: #ff0000;\">{traceback}</span>"
                                 .format(traceback=traceback.format_exc().replace("\n", "<br>")))
@@ -115,13 +72,53 @@ class Server:
                                 "Check your configuration and try again</span>".format(addr=self.own_address))
 
     def stop_server(self):
-        self.run = False
-        self.listening_thread.join(5*len(self.clients))
+        """Stops the server by joining all threads and closing the server socket"""
+        for thread in self.client_threads:
+            if thread.isAlive():
+                thread.join(1)
+        self.client_threads.clear()
+
+        if self.listening_thread.isAlive():
+            self.listening_thread.join(1)
+
+        self.socket.shutdown(2)
         self.socket.close()
-        self.ui_obj.console("<span style=\" color: #0dd817;\">Server successfully shutdown<br></span>")
-        self.ui_obj.runButton.setText(self._translate("serverWindow", "Run"))
-        self.ui_obj.runButton.disconnect()
-        self.ui_obj.runButton.clicked.connect(self.start_server)
+
+        self.ui_obj.console("Server successfully shutdown")
+        self.ui_obj.runButton.setDisabled(False)
+        self.ui_obj.stopButton.setDisabled(True)
+
+    def listen(self):
+        """Listen to network and starts the handling of upcoming connections,
+        this is the target for dispatcher thread"""
+
+        while True:
+            client, client_address = self.socket.accept()
+            self.ui_obj.console("Connection established with {host}:{port}"
+                                .format(host=client_address[0], port=client_address[1]))
+
+            self.clients[client_address] = {'rooms': {}, 'connected': None, 'socket': client}
+
+            new_thread = Thread(target=self.handle_connection, args=(client_address, client, ))
+            self.client_threads.append(new_thread)
+            new_thread.start()
+
+    def handle_connection(self, address, socket):
+        """Handles a connection with one client, this is the target for each worker thread"""
+        while True:
+            message = socket.recv(self.buffer_size)
+            message_text = message.decode('UTF-8')
+
+            match = self.commands_re.match(message_text)
+            if match:
+                print("Placeholder: User issued a command")
+            else:
+                client_info = self.clients[address]
+                client_room = client_info['connected']
+                if client_room is None:
+                    print("Placeholder: User must connected to a room before")
+                else:
+                    print("Placeholder: broadcast message to all users in 'client_room' excepting the sender user")
 
 
 if __name__ == "__main__":

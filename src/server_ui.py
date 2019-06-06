@@ -82,6 +82,9 @@ class Ui_serverWindow(object):
         self.runButton = QtWidgets.QPushButton(self.networkFrame)
         self.runButton.setObjectName("runButton")
         self.horizontalLayout.addWidget(self.runButton)
+        self.stopButton = QtWidgets.QPushButton(self.networkFrame)
+        self.stopButton.setObjectName("stopButton")
+        self.horizontalLayout.addWidget(self.stopButton)
         self.verticalLayout_2.addWidget(self.networkFrame)
         self.outputFrame = QtWidgets.QGroupBox(self.centralWidget)
         self.outputFrame.setObjectName("outputFrame")
@@ -113,6 +116,7 @@ class Ui_serverWindow(object):
         self.portLabel.setText(_translate("serverWindow", "Port:"))
         self.udpRadioButton.setText(_translate("serverWindow", "UDP"))
         self.runButton.setText(_translate("serverWindow", "Run"))
+        self.stopButton.setText(_translate("serverWindow", "Stop"))
         self.outputFrame.setTitle(_translate("serverWindow", "Output"))
 
     def console(self, text):
