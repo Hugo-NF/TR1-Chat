@@ -23,7 +23,7 @@ class Server:
         self.clients = {}
 
         # Regexp to easily switch between commands
-        self.commands_re = re.compile("^\\\(quit|leave|join|rooms|online|create)(?:\s*{(.*)})?$", re.MULTILINE)
+        self.commands_re = re.compile("^\\\(quit|leave|join|rooms|online|create|insert)(?:\s*{(.*)})?$", re.MULTILINE)
 
         # GUI object configuration
         self.ui_obj = ui_obj
@@ -116,8 +116,7 @@ class Server:
             self.ui_obj.console("Connection established with {host}:{port}"
                                 .format(host=client_address[0], port=client_address[1]))
 
-
-            self.clients[client_address] = {'rooms': {}, 'connected': None, 'socket': client}
+            self.clients[client_address] = None
 
             new_thread = Thread(target=self.handle_connection, args=(client_address, client, ))
             self.client_threads.append(new_thread)
@@ -125,21 +124,42 @@ class Server:
 
     def handle_connection(self, address, socket):
         """Handles a connection with one client, this is the target for each worker thread"""
+        client_info = self.clients[address]
+        client_user = None if client_info is None else self.db_conn.get_user_by('id_user', client_info['id'])
+
         while True:
             message = socket.recv(self.buffer_size)
             message_text = message.decode('UTF-8')
 
             match = self.commands_re.match(message_text)
             if match:
-                print("Placeholder: User issued a command")
-            else:
-                client_info = self.clients[address]
-                client_room = client_info['connected']
-                if client_room is None:
-                    print("Placeholder: User must connected to a room before")
+                command, argument = match.groups()
+                if command == 'quit':
+                    break
+                elif command == 'join':
+                    print("Insert user to new room")
+                elif command == 'leave':
+                    print("Leave current room, if joined")
+                elif command == 'rooms':
+                    print("Send all rooms")
+                elif command == 'online':
+                    print("Send all online room users")
+                elif command == 'create':
+                    print("Create a new room")
+                elif command == 'insert':
+                    print("Insert user on database")
                 else:
-                    print("Placeholder: broadcast message to all users in 'client_room' excepting the sender user")
+                    self.ui_obj.console("User at %s issued unknown command\n" % address)
+            else:
 
+                print("Placeholder: broadcast message to all users in 'client_room'")
+
+    def broadcast(self, msg, prefix="Server"):
+        """Broadcasts a message to all the clients."""
+
+        # Prefix is for name identification.
+        for client in self.clients.values():
+            client['socket'].send(bytes("[{prefix}]: {msg}".format(prefix=prefix, msg=msg), "utf8"))
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
