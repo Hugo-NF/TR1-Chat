@@ -7,6 +7,7 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QMessageBox, QMainWindow
 
 class Ui_serverWindow(object):
     def setupUi(self, serverWindow):
@@ -121,3 +122,14 @@ class Ui_serverWindow(object):
 
     def console(self, text):
         self.serverOutput.append(text)
+
+class ServerWindow(QMainWindow):
+    def closeEvent(self, event):
+        quit_msg = "Are you sure you want to exit the program?\n" \
+                   "Warning: DO NOT quit if server is still running!"
+        reply = QMessageBox.question(self, 'Quit',
+                                     quit_msg, QMessageBox.Yes, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            event.accept()
+        else:
+            event.ignore()
