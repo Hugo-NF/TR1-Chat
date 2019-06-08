@@ -3,6 +3,7 @@
 import sys
 from socket import *
 
+from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtWidgets import QApplication, QDialog
 
 from src.client_ui import ClientWindow, Ui_MainWindow
@@ -53,7 +54,6 @@ if __name__ == "__main__":
     main_ui.roomsButton.clicked.connect(rooms_dialog.show)
 
     conn_ui.connectButton.clicked.connect(conn_ui.start_animation)
-    main_ui.actionAbout_Qt.triggered.connect(app.aboutQt)
 
     # Application initial size
     main_window.resize(1024, 768)
