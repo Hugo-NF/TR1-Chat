@@ -6,7 +6,13 @@
 #
 # WARNING! All changes made in this file will be lost!
 
+# PyQt framework
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QMainWindow, QMessageBox
+
+# Created Qt interfaces
+from src.connect_ui import Ui_connectionDialog
+from src.rooms_ui import Ui_roomsDialog
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -99,3 +105,14 @@ class Ui_MainWindow(object):
 
     def read_message_box(self):
         return self.messageEdit.toPlainText()
+
+class ClientWindow(QMainWindow):
+    def closeEvent(self, event):
+        quit_msg = "Are you sure you want to exit the program?\n" \
+                   "Warning: DO NOT quit if server is still running!"
+        reply = QMessageBox.question(self, 'Quit',
+                                     quit_msg, QMessageBox.Yes, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            event.accept()
+        else:
+            event.ignore()

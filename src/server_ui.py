@@ -123,6 +123,7 @@ class Ui_serverWindow(object):
     def console(self, text):
         self.serverOutput.append(text)
 
+
 class ServerWindow(QMainWindow):
     def closeEvent(self, event):
         quit_msg = "Are you sure you want to exit the program?\n" \

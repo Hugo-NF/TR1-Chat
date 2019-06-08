@@ -6,16 +6,13 @@ import re                                                       # Regular expres
 import sys
 
 # Local classes
-from PyQt5.QtWidgets import QApplication, QMainWindow           # PyQt framework
+from PyQt5.QtWidgets import QApplication                        # PyQt framework
 from PyQt5 import QtCore
 from src.server_ui import Ui_serverWindow, ServerWindow         # Created Qt interfaces
 
 
 class Server:
     """Implements a multi-threaded server for a asynchronous chat application"""
-
-    # Path to server sqlite3 db (Will be created if doesn't exist)
-    db_path = "../db/server"
 
     def __init__(self, ui_obj, host="127.0.0.1", port=8080, is_tcp=True, buffer_size=1024, backlog=10):
         # Data management
@@ -72,6 +69,7 @@ class Server:
             self.listening_thread.start()
 
         except OSError:
+            # Treating exception thrown by bind
             self.ui_obj.console("<span style=\" color: #ff0000;\">{traceback}</span>"
                                 .format(traceback=traceback.format_exc().replace("\n", "<br>")))
             self.ui_obj.console("<span style=\" color: #ff0000;\">Could not start server at address {addr}. "
@@ -110,77 +108,134 @@ class Server:
             self.ui_obj.console("Connection established with {host}:{port}"
                                 .format(host=client_address[0], port=client_address[1]))
 
+            # Create a new thread and insert it to server list
             new_thread = Thread(target=self.handle_connection, args=(client_address, client, ))
             self.client_threads.append(new_thread)
             new_thread.start()
 
     def handle_connection(self, address, socket):
-        """Handles a connection with one client, this is the target for each worker thread"""
+        """
+        Handles a connection with one client, this is the target for each worker thread
+        Params:
+        1. address = tuple with IP (string) and port (integer) of connected user, e.g ('127.0.0.1', 8080)
+        2. socket = Python socket object already connected to address
 
+        Description:
+        1. Retrieve user's nickname that will be used for entire section
+            * New messages will be requested until receiving a unique display name
+        2. Starts a 'infinity loop' treating inbound messages from socket
+            2.1. Decodes the message between command or chat message
+                * If it's a chat message, broadcast it to all users in room
+                * If it's a command, execute correspondent action
+        """
+
+        # Initial conditions
         proceed = True
         nick = ""
         insert_regexp = re.compile("^\\\insert\s*(?:{(.*)})?$", re.MULTILINE)
-        # Getting user nickname
+
+        # Loop to get user's nickname
         while proceed:
+            # Retrieve message from socket, decode and match with regexp
             message = socket.recv(self.buffer_size)
             message_text = message.decode('UTF-8')
             match = insert_regexp.match(message_text)
+
+            # If line matched, it means that user issued insert command
             if match:
                 nick = match.groups()
                 if nick in self.clients.keys():
-                    socket.send(bytes("\\server{msg}".format(msg="Nickname already in use"), 'utf8'))
+                    socket.send(bytes("\\server = failure", 'utf8'))
                 else:
                     self.clients[nick] = {'address': address, 'socket': socket, 'room': None}
                     proceed = False
 
+        # 'Infinity' loop
         while True:
+            # Wait until receive a message
             message = socket.recv(self.buffer_size)
             message_text = message.decode('UTF-8')
 
+            # Tries to match message_text to regexp
             match = self.commands_re.match(message_text)
             if match:
                 command, argument = match.groups()
+
+                # Quit: broadcast advise to room, send confirmation to client and break outer loop to exit thread
                 if command == 'quit':
                     self.room_announce("{nick} is offline\n".format(nick=nick), self.clients[nick]['room'], None, "Server")
-                    socket.send(bytes("\\server{success}", "utf8"))
+                    self.leave_room(nick, socket)
+                    socket.send(bytes("\\quit = success", "utf8"))
                     break
+
+                # Rooms: join all keys from rooms hash and send back to user
                 elif command == 'rooms':
                     room_list = "\\rooms = " + "\n".join(self.rooms.keys())
                     socket.send(bytes(room_list, "utf8"))
+
+                # Online: join all keys from rooms['room'] hash and send back to user
                 elif command == 'online':
                     if (argument in self.rooms.keys()) and (argument is not None):
                         users_list = "\\users = " + "\n".join(self.rooms[argument].keys())
                         socket.send(bytes(users_list, "utf8"))
+
+                # Join: change 'room' value on user hash entry, add his entry to room,
+                # send confirmation and broadcast message to room
                 elif command == 'join':
-                    if (argument in self.rooms.keys()) and (argument is not None):
-                        self.clients[nick]['room'] = argument
-                        socket.send(bytes("\\server{success}", "utf8"))
-                        self.room_announce("{nick} has joined the chat", argument, None, "Server")
-                    else:
-                        socket.send(bytes("\\server{failure}", "utf8"))
+                    self.join_room(nick, argument, socket)
+
+                # Leave: remove his entry from room, clear 'room' value on user hash entry,
+                # send confirmation and broadcast message to room
                 elif command == 'leave':
-                    socket.send(bytes("\\server{success}", "utf8"))
-                    self.room_announce("{nick} has left the chat", self.clients[nick]['room'], None, "Server")
-                    self.clients[nick]['room'] = None
+                    self.leave_room(nick, socket)
+
+                # Create: create new entry on rooms hash
                 elif command == 'create':
-                    if (argument not in self.rooms.keys()) and (argument is not None):
-                        self.rooms[argument] = {'users': {}}
-                        socket.send(bytes("\\server{success}", "utf8"))
-                    else:
-                        socket.send(bytes("\\server{failure}", "utf8"))
+                    self.create_room(argument, socket)
+
+            # The message was a normal text
             else:
                 self.room_announce(message_text, self.clients[nick]['room'], socket, nick)
 
     def room_announce(self, msg, room, sender, prefix):
+        """Send a message to all sockets given a valid room"""
+        # The following condition assumes that rooms_hash will be accessed within function call
         if room is not None:
             client_list = self.rooms[room]
             Server.broadcast(msg, [client['socket'] for client in client_list.values()], prefix)
         else:
-            sender.send(bytes("\\server{noroom}"), "utf8")
+            sender.send(bytes("\\server = no_room"), "utf8")
+
+    def join_room(self, user_nick, room, user_socket):
+        """Insert user in a room"""
+        if (room in self.rooms.keys()) and (room is not None):
+            self.clients[user_nick]['room'] = room
+            self.rooms[room][user_nick] = self.clients[user_nick]
+            user_socket.send(bytes("\\join = success", "utf8"))
+            self.room_announce("{nick} has joined the chat", user_nick, None, "Server")
+        else:
+            # Room does not exist
+            user_socket.send(bytes("\\join = failure", "utf8"))
+
+    def leave_room(self, user_nick, user_socket):
+        """Remove user from room"""
+        user_socket.send(bytes("\\leave = success", "utf8"))
+        self.room_announce("{nick} has left the chat", self.clients[user_nick]['room'], None, "Server")
+        del self.rooms[self.clients[user_nick]['room']][user_nick]
+        self.clients[user_nick]['room'] = None
+
+    def create_room(self, room_name, user_socket):
+        """Creates a new room"""
+        if (room_name not in self.rooms.keys()) and (room_name is not None):
+            self.rooms[room_name] = {'users': {}}
+            user_socket.send(bytes("\\create = success", "utf8"))
+        else:
+            # Room already exists
+            user_socket.send(bytes("\\create = failure", "utf8"))
 
     @staticmethod
     def broadcast(msg, recipients, prefix):
-        """Broadcasts a message to all the clients."""
+        """Static method that sends a message to all socket in recipients list, prefix is for an identification tag"""
 
         # Prefix is for name identification.
         for recipient in recipients:
