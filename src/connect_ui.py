@@ -2,13 +2,12 @@
 
 # Form implementation generated from reading ui file 'connect.ui'
 #
-# Created by: PyQt5 UI code generator 5.10.1
+# Created by: PyQt5 UI code generator 5.12.1
 #
 # WARNING! All changes made in this file will be lost!
-import time
-from threading import Thread
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_connectionDialog(object):
     def setupUi(self, connectionDialog):
@@ -49,12 +48,12 @@ class Ui_connectionDialog(object):
         self.connectButton.setObjectName("connectButton")
         self.gridLayout.addWidget(self.connectButton, 1, 2, 1, 1)
         self.connectionProgress = QtWidgets.QProgressBar(connectionDialog)
-        self.connectionProgress.setProperty("value", 0)
+        self.connectionProgress.setMinimum(0)
+        self.connectionProgress.setMaximum(0)
+        self.connectionProgress.setProperty("value", -1)
         self.connectionProgress.setFormat("")
         self.connectionProgress.setObjectName("connectionProgress")
         self.gridLayout.addWidget(self.connectionProgress, 0, 2, 1, 1)
-
-        self.animationThread = Thread(target=self.conn_animate)
 
         self.retranslateUi(connectionDialog)
         QtCore.QMetaObject.connectSlotsByName(connectionDialog)
@@ -70,29 +69,4 @@ class Ui_connectionDialog(object):
         self.udpRadioButton.setText(_translate("connectionDialog", "UDP"))
         self.connectButton.setText(_translate("connectionDialog", "Connect"))
 
-    def conn_animate(self):
-        self.connectionProgress.show()
 
-        for i in range(30):
-            self.connectionProgress.setInvertedAppearance(False)
-            for value in range(0, 101, 10):
-                time.sleep(0.05)
-                self.connectionProgress.setValue(value)
-            self.connectionProgress.setInvertedAppearance(True)
-            for value in range(101, -1, -10):
-                time.sleep(0.05)
-                self.connectionProgress.setValue(value)
-
-    def start_animation(self):
-        if not self.animationThread.isAlive():
-            self.animationThread.start()
-
-    def stop_animation(self, connect):
-        if self.animationThread.isAlive():
-            self.animationThread.join(1)
-            self.connectionProgress.setInvertedAppearance(False)
-            self.connectionProgress.setValue(100)
-            if connect:
-                self.connectionProgress.setFormat("Connected")
-            else:
-                self.connectionProgress.setFormat("Failed")

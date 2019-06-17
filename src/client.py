@@ -30,6 +30,23 @@ class Client:
     def connect(self):
         self.socket.connect(self.conn_address)
 
+    def disconnect(self):
+        self.socket.shutdown(2)
+        self.socket.close()
+
+    def receive(self):
+        while True:
+            try:
+                message = self.socket.recv(self.buffer_size).decode("utf8")
+            except OSError:  # Client has left
+                break
+
+    def send(self, message):
+        self.socket.send(bytes(message, "utf8"))
+
+    def treat_message(self, message):
+        print()
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
@@ -52,8 +69,6 @@ if __name__ == "__main__":
     # Application initial configuration
     main_ui.connectionButton.clicked.connect(conn_dialog.show)
     main_ui.roomsButton.clicked.connect(rooms_dialog.show)
-
-    conn_ui.connectButton.clicked.connect(conn_ui.start_animation)
 
     # Application initial size
     main_window.resize(1024, 768)

@@ -138,14 +138,14 @@ class Server:
         while proceed:
             # Retrieve message from socket, decode and match with regexp
             message = socket.recv(self.buffer_size)
-            message_text = message.decode('UTF-8')
+            message_text = message.decode("utf8")
             match = insert_regexp.match(message_text)
 
             # If line matched, it means that user issued insert command
             if match:
                 nick = match.groups()
                 if nick in self.clients.keys():
-                    socket.send(bytes("\\server = failure", 'utf8'))
+                    socket.send(bytes("\\server = failure", "utf8"))
                 else:
                     self.clients[nick] = {'address': address, 'socket': socket, 'room': None}
                     proceed = False
@@ -154,7 +154,7 @@ class Server:
         while True:
             # Wait until receive a message
             message = socket.recv(self.buffer_size)
-            message_text = message.decode('UTF-8')
+            message_text = message.decode("utf8")
 
             # Tries to match message_text to regexp
             match = self.commands_re.match(message_text)
