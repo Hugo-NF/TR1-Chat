@@ -4,7 +4,6 @@ from socket import *                                            # Socket program
 from threading import Thread                                    # Python Threads
 import re                                                       # Regular expressions
 import sys
-
 # Local classes
 from PyQt5.QtWidgets import QApplication                        # PyQt framework
 from PyQt5 import QtCore
@@ -129,6 +128,8 @@ class Server:
                 * If it's a command, execute correspondent action
         """
 
+        self.ui_obj.console("Address %s:%s Thread started" % (address[0], address[1]))
+
         # Initial conditions
         proceed = True
         nick = ""
@@ -139,6 +140,7 @@ class Server:
             # Retrieve message from socket, decode and match with regexp
             message = socket.recv(self.buffer_size)
             message_text = message.decode("utf8")
+            self.ui_obj.console("Address %s: %s" %(address, message_text))
             match = insert_regexp.match(message_text)
 
             # If line matched, it means that user issued insert command

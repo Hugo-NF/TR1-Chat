@@ -44,6 +44,10 @@ class Client:
     def send(self, message):
         self.socket.send(bytes(message, "utf8"))
 
+    def send_action(self):
+        message = self.ui_obj.read_message_box()
+        self.send(message)
+
     def treat_message(self, message):
         print()
 
