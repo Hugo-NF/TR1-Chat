@@ -140,17 +140,18 @@ class Server:
             # Retrieve message from socket, decode and match with regexp
             message = socket.recv(self.buffer_size)
             message_text = message.decode("utf8")
-            self.ui_obj.console("Address %s: %s" %(address, message_text))
             match = insert_regexp.match(message_text)
 
             # If line matched, it means that user issued insert command
             if match:
-                nick = match.groups()
+                nick = match.group(1)
                 if nick in self.clients.keys():
                     socket.send(bytes("\\server = failure", "utf8"))
                 else:
                     self.clients[nick] = {'address': address, 'socket': socket, 'room': None}
                     proceed = False
+            else:
+                socket.send(bytes("\\server = not valid nickname", "utf8"))
 
         # 'Infinity' loop
         while True:
@@ -165,7 +166,7 @@ class Server:
 
                 # Quit: broadcast advise to room, send confirmation to client and break outer loop to exit thread
                 if command == 'quit':
-                    self.room_announce("{nick} is offline\n".format(nick=nick), self.clients[nick]['room'], None, "Server")
+                    self.room_announce("{nick} is offline\n".format(nick=nick), self.clients[nick]['room'], socket, "Server")
                     self.leave_room(nick, socket)
                     socket.send(bytes("\\quit = success", "utf8"))
                     break
@@ -178,7 +179,7 @@ class Server:
                 # Online: join all keys from rooms['room'] hash and send back to user
                 elif command == 'online':
                     if (argument in self.rooms.keys()) and (argument is not None):
-                        users_list = "\\users = " + "\n".join(self.rooms[argument].keys())
+                        users_list = "\\users = " + "\n".join(self.rooms[argument]['users'].keys())
                         socket.send(bytes(users_list, "utf8"))
 
                 # Join: change 'room' value on user hash entry, add his entry to room,
@@ -203,8 +204,7 @@ class Server:
         """Send a message to all sockets given a valid room"""
         # The following condition assumes that rooms_hash will be accessed within function call
         if room is not None:
-            client_list = self.rooms[room]
-            Server.broadcast(msg, [client['socket'] for client in client_list.values()], prefix)
+            Server.broadcast(msg, [client['socket'] for client in self.rooms[room]['users'].values()], prefix)
         else:
             sender.send(bytes("\\server = no_room"), "utf8")
 
@@ -212,9 +212,9 @@ class Server:
         """Insert user in a room"""
         if (room in self.rooms.keys()) and (room is not None):
             self.clients[user_nick]['room'] = room
-            self.rooms[room][user_nick] = self.clients[user_nick]
+            self.rooms[room]['users'][user_nick] = self.clients[user_nick]
             user_socket.send(bytes("\\join = success", "utf8"))
-            self.room_announce("{nick} has joined the chat", user_nick, None, "Server")
+            self.room_announce("{nick} has joined the chat".format(nick=user_nick), room, user_socket, "Server")
         else:
             # Room does not exist
             user_socket.send(bytes("\\join = failure", "utf8"))
@@ -222,7 +222,7 @@ class Server:
     def leave_room(self, user_nick, user_socket):
         """Remove user from room"""
         user_socket.send(bytes("\\leave = success", "utf8"))
-        self.room_announce("{nick} has left the chat", self.clients[user_nick]['room'], None, "Server")
+        self.room_announce("{nick} has left the chat".format(nick=user_nick), self.clients[user_nick]['room'], user_socket, "Server")
         del self.rooms[self.clients[user_nick]['room']][user_nick]
         self.clients[user_nick]['room'] = None
 
