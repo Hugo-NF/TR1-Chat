@@ -168,19 +168,22 @@ class Server:
                 if command == 'quit':
                     self.room_announce("{nick} is offline\n".format(nick=nick), self.clients[nick]['room'], socket, "Server")
                     self.leave_room(nick, socket)
+                    del self.clients[nick]
                     socket.send(bytes("\\quit = success", "utf8"))
                     break
 
                 # Rooms: join all keys from rooms hash and send back to user
                 elif command == 'rooms':
-                    room_list = "\\rooms = " + "\n".join(self.rooms.keys())
+                    room_list = "\\rooms = " + "|".join(self.rooms.keys())
                     socket.send(bytes(room_list, "utf8"))
 
                 # Online: join all keys from rooms['room'] hash and send back to user
                 elif command == 'online':
                     if (argument in self.rooms.keys()) and (argument is not None):
-                        users_list = "\\users = " + "\n".join(self.rooms[argument]['users'].keys())
+                        users_list = "\\online = " + "|".join(self.rooms[argument]['users'].keys())
                         socket.send(bytes(users_list, "utf8"))
+                    else:
+                        socket.send(bytes("\\online = invalid_room", "utf8"))
 
                 # Join: change 'room' value on user hash entry, add his entry to room,
                 # send confirmation and broadcast message to room
@@ -206,7 +209,7 @@ class Server:
         if room is not None:
             Server.broadcast(msg, [client['socket'] for client in self.rooms[room]['users'].values()], prefix)
         else:
-            sender.send(bytes("\\server = no_room"), "utf8")
+            sender.send(bytes("\\server = no_room", "utf8"))
 
     def join_room(self, user_nick, room, user_socket):
         """Insert user in a room"""
@@ -221,10 +224,13 @@ class Server:
 
     def leave_room(self, user_nick, user_socket):
         """Remove user from room"""
-        user_socket.send(bytes("\\leave = success", "utf8"))
-        self.room_announce("{nick} has left the chat".format(nick=user_nick), self.clients[user_nick]['room'], user_socket, "Server")
-        del self.rooms[self.clients[user_nick]['room']][user_nick]
-        self.clients[user_nick]['room'] = None
+        if self.clients[user_nick]['room'] is not None:
+            user_socket.send(bytes("\\leave = success", "utf8"))
+            self.room_announce("{nick} has left the chat".format(nick=user_nick), self.clients[user_nick]['room'], user_socket, "Server")
+            del self.rooms[self.clients[user_nick]['room']]['users'][user_nick]
+            self.clients[user_nick]['room'] = None
+        else:
+            user_socket.send(bytes("\\leave = no_room", "utf8"))
 
     def create_room(self, room_name, user_socket):
         """Creates a new room"""
