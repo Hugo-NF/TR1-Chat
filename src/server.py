@@ -13,7 +13,7 @@ from src.server_ui import Ui_serverWindow, ServerWindow         # Created Qt int
 class Server:
     """Implements a multi-threaded server for a asynchronous chat application"""
 
-    def __init__(self, ui_obj, host="127.0.0.1", port=8080, is_tcp=True, buffer_size=1024, backlog=10):
+    def __init__(self, ui_obj, host="127.0.0.1", port=8080, buffer_size=1024, backlog=10):
         # Data management
         self.clients = {}
         self.rooms = {}
@@ -44,9 +44,9 @@ class Server:
         self.backlog = self.ui_obj.backlogEdit.value()
         self.own_address = (self.host, self.port)
 
-        # Create socket with user selected properties.
+        # Create TCP socket with user selected properties.
         # setsockopt allows this socket to reuse the same address
-        self.socket = socket(AF_INET, SOCK_STREAM if self.ui_obj.tcpRadioButton.isChecked() else SOCK_DGRAM)
+        self.socket = socket(AF_INET, SOCK_STREAM)
         self.socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 
         try:

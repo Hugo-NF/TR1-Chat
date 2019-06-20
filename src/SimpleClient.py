@@ -33,6 +33,3 @@ while True:
 listening_thread.join(1)
 sockobj.close()
 
-
-
-

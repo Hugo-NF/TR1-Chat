@@ -29,21 +29,14 @@
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
         <layout class="QGridLayout" name="optionsLayout">
-         <item row="0" column="0">
-          <widget class="QLabel" name="hostLabel">
+         <item row="1" column="4">
+          <widget class="QLabel" name="bytesLabel">
            <property name="text">
-            <string>Host:</string>
+            <string>bytes</string>
            </property>
           </widget>
          </item>
          <item row="1" column="3">
-          <widget class="QLabel" name="buffLabel">
-           <property name="text">
-            <string>Buffer size:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="4">
           <widget class="QSpinBox" name="buffEdit">
            <property name="correctionMode">
             <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
@@ -62,30 +55,6 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="5">
-          <widget class="QLabel" name="bytesLabel">
-           <property name="text">
-            <string>bytes</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="3">
-          <widget class="QLabel" name="backlogLabel">
-           <property name="text">
-            <string>Backlog:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="4">
-          <widget class="QSpinBox" name="backlogEdit">
-           <property name="singleStep">
-            <number>5</number>
-           </property>
-           <property name="value">
-            <number>10</number>
-           </property>
-          </widget>
-         </item>
          <item row="0" column="1">
           <widget class="QLineEdit" name="hostEdit">
            <property name="text">
@@ -96,20 +65,17 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="5">
+         <item row="0" column="4">
           <widget class="QLabel" name="noConnectionsLabel">
            <property name="text">
             <string>connections</string>
            </property>
           </widget>
          </item>
-         <item row="0" column="2">
-          <widget class="QRadioButton" name="tcpRadioButton">
+         <item row="0" column="0">
+          <widget class="QLabel" name="hostLabel">
            <property name="text">
-            <string>TCP</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
+            <string>Host:</string>
            </property>
           </widget>
          </item>
@@ -121,9 +87,26 @@
           </widget>
          </item>
          <item row="1" column="2">
-          <widget class="QRadioButton" name="udpRadioButton">
+          <widget class="QLabel" name="buffLabel">
            <property name="text">
-            <string>UDP</string>
+            <string>Buffer size:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="3">
+          <widget class="QSpinBox" name="backlogEdit">
+           <property name="singleStep">
+            <number>5</number>
+           </property>
+           <property name="value">
+            <number>10</number>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QLabel" name="backlogLabel">
+           <property name="text">
+            <string>Backlog:</string>
            </property>
           </widget>
          </item>
