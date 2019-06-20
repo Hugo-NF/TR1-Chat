@@ -1,10 +1,9 @@
-# Server imports
-import traceback
 from socket import *                                            # Socket programming
 from threading import Thread                                    # Python Threads
 import re                                                       # Regular expressions
 import sys
-# Local classes
+import traceback
+
 from PyQt5.QtWidgets import QApplication                        # PyQt framework
 from PyQt5 import QtCore
 from src.server_ui import Ui_serverWindow, ServerWindow         # Created Qt interfaces
@@ -19,7 +18,7 @@ class Server:
         self.rooms = {}
 
         # Regexp to easily switch between commands
-        self.commands_re = re.compile("^\\\(quit|leave|join|rooms|online|create|insert)(?:\s*{(.*)})?$", re.MULTILINE)
+        self.commands_re = re.compile("^\\\(quit|leave|join|rooms|online|create)(?:\s*{(.*)})?$", re.MULTILINE)
 
         # GUI object configuration
         self.ui_obj = ui_obj
@@ -134,7 +133,7 @@ class Server:
         # Initial conditions
         proceed = True
         nick = ""
-        insert_regexp = re.compile("^\\\insert\s*(?:{(.*)})?$", re.MULTILINE)
+        insert_regexp = re.compile("^\\\(quit|insert)\s*(?:{(.*)})?$", re.MULTILINE)
 
         # Loop to get user's nickname
         while proceed:
@@ -145,14 +144,17 @@ class Server:
 
             # If line matched, it means that user issued insert command
             if match:
-                nick = match.group(1)
-                if nick in self.clients.keys():
-                    socket.send(bytes("\\server = not_valid_nickname", "utf8"))
-                else:
-                    self.clients[nick] = {'address': address, 'socket': socket, 'room': None}
-                    proceed = False
+                command, nick = match.groups()
+                if command == "quit":
+                    return
+                elif command == "insert" and nick is not None:
+                    if nick in self.clients.keys():
+                        socket.send(bytes("\\insert=not_valid_nickname", "utf8"))
+                    else:
+                        self.clients[nick] = {'address': address, 'socket': socket, 'room': None}
+                        proceed = False
             else:
-                socket.send(bytes("\\server = not_valid_nickname", "utf8"))
+                socket.send(bytes("\\insert=not_valid_nickname", "utf8"))
 
         # Server console feedback
         self.ui_obj.console("Address %s:%s is now using '%s' nickname" % (address[0], address[1], nick))
@@ -172,10 +174,10 @@ class Server:
                 if command == 'quit':
                     self.leave_room(nick, socket)
                     del self.clients[nick]
-                    socket.send(bytes("\\quit = success", "utf8"))
+                    socket.send(bytes("\\quit=success", "utf8"))
                     socket.close()
                     self.ui_obj.console("%s (address %s:%s) has quit" % (nick, address[0], address[1]))
-                    break
+                    return
 
                 # Rooms: join all keys from rooms hash and send back to user
                 elif command == 'rooms':
@@ -188,7 +190,7 @@ class Server:
                         users_list = "\\online=" + "|".join(self.rooms[argument]['users'].keys())
                         socket.send(bytes(users_list, "utf8"))
                     else:
-                        socket.send(bytes("\\online = invalid_room", "utf8"))
+                        socket.send(bytes("\\online=no_room", "utf8"))
 
                 # Join: change 'room' value on user hash entry, add his entry to room,
                 # send confirmation and broadcast message to room
@@ -214,25 +216,25 @@ class Server:
         if room is not None:
             Server.broadcast(msg, [client['socket'] for client in self.rooms[room]['users'].values()], prefix)
         else:
-            sender.send(bytes("\\server = no_room", "utf8"))
+            sender.send(bytes("\\server=no_room", "utf8"))
 
     def join_room(self, user_nick, room, user_socket):
         """Insert user in a room"""
         if (room in self.rooms.keys()) and (room is not None):
             self.clients[user_nick]['room'] = room
             self.rooms[room]['users'][user_nick] = self.clients[user_nick]
-            user_socket.send(bytes("\\join = success", "utf8"))
+            user_socket.send(bytes("\\join=success", "utf8"))
             self.room_announce("{nick} has joined the chat".format(nick=user_nick), room, user_socket, "Server")
             # Server console feedback
             self.ui_obj.console("'%s' joined '%s' room" % (user_nick, room))
         else:
             # Room does not exist
-            user_socket.send(bytes("\\join = failure", "utf8"))
+            user_socket.send(bytes("\\join=failure", "utf8"))
 
     def leave_room(self, user_nick, user_socket):
         """Remove user from room"""
         if self.clients[user_nick]['room'] is not None:
-            user_socket.send(bytes("\\leave = success", "utf8"))
+            user_socket.send(bytes("\\leave=success", "utf8"))
             self.room_announce("{nick} has left the chat".format(nick=user_nick), self.clients[user_nick]['room'], user_socket, "Server")
             del self.rooms[self.clients[user_nick]['room']]['users'][user_nick]
             self.clients[user_nick]['room'] = None
@@ -240,19 +242,19 @@ class Server:
             # Server console feedback
             self.ui_obj.console("'%s' is now outside of any room" % user_nick)
         else:
-            user_socket.send(bytes("\\leave = no_room", "utf8"))
+            user_socket.send(bytes("\\leave=no_room", "utf8"))
 
     def create_room(self, room_name, user_socket):
         """Creates a new room"""
         if (room_name not in self.rooms.keys()) and (room_name is not None):
             self.rooms[room_name] = {'users': {}}
-            user_socket.send(bytes("\\create = success", "utf8"))
+            user_socket.send(bytes("\\create=success", "utf8"))
 
             # Server console feedback
             self.ui_obj.console("'%s' room has been created" % room_name)
         else:
             # Room already exists
-            user_socket.send(bytes("\\create = failure", "utf8"))
+            user_socket.send(bytes("\\create=failure", "utf8"))
 
     @staticmethod
     def broadcast(msg, recipients, prefix):
