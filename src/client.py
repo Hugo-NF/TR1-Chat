@@ -115,24 +115,20 @@ class Client:
         room = self.rooms_ui.roomNameEdit.text()
         self.socket.send(bytes("\\create{%s}" % room, "utf8"))
         self.get_rooms()
-        print("CREATED ROOM")  # TODO Remove print
 
     def create_user(self):
         nick = self.rooms_ui.displayNameEdit.text()
         self.socket.send(bytes("\\insert{%s}" % nick, "utf8"))
         self.rooms_ui.displayNameEdit.setDisabled(True)
         self.rooms_ui.saveButton.setDisabled(True)
-        print("CREATED USER") # TODO Remove print
+        self.get_rooms()
 
     def get_rooms(self):
         self.socket.send(bytes("\\rooms", "utf8"))
-        print("GET ROOMS")  # TODO Remove print
 
     def get_users(self, item):
         room = item.text()
-        print(room)
         self.socket.send(bytes("\\online{%s}" % room, "utf8"))
-        print("GET USER")  # TODO Remove print
 
     def join_room(self):
         item = self.rooms_ui.roomsList.currentItem()
