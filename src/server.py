@@ -128,7 +128,8 @@ class Server:
                 * If it's a command, execute correspondent action
         """
 
-        self.ui_obj.console("Address %s:%s Thread started" % (address[0], address[1]))
+        # Server console feedback
+        self.ui_obj.console("Thread started for address %s:%s" % (address[0], address[1]))
 
         # Initial conditions
         proceed = True
@@ -146,12 +147,15 @@ class Server:
             if match:
                 nick = match.group(1)
                 if nick in self.clients.keys():
-                    socket.send(bytes("\\server = failure", "utf8"))
+                    socket.send(bytes("\\server = not_valid_nickname", "utf8"))
                 else:
                     self.clients[nick] = {'address': address, 'socket': socket, 'room': None}
                     proceed = False
             else:
-                socket.send(bytes("\\server = not valid nickname", "utf8"))
+                socket.send(bytes("\\server = not_valid_nickname", "utf8"))
+
+        # Server console feedback
+        self.ui_obj.console("Address %s:%s is now using '%s' nickname" % (address[0], address[1], nick))
 
         # 'Infinity' loop
         while True:
@@ -166,21 +170,22 @@ class Server:
 
                 # Quit: broadcast advise to room, send confirmation to client and break outer loop to exit thread
                 if command == 'quit':
-                    self.room_announce("{nick} is offline\n".format(nick=nick), self.clients[nick]['room'], socket, "Server")
                     self.leave_room(nick, socket)
                     del self.clients[nick]
                     socket.send(bytes("\\quit = success", "utf8"))
+                    socket.close()
+                    self.ui_obj.console("%s (address %s:%s) has quit" % (nick, address[0], address[1]))
                     break
 
                 # Rooms: join all keys from rooms hash and send back to user
                 elif command == 'rooms':
-                    room_list = "\\rooms = " + "|".join(self.rooms.keys())
+                    room_list = "\\rooms=" + "|".join(self.rooms.keys())
                     socket.send(bytes(room_list, "utf8"))
 
                 # Online: join all keys from rooms['room'] hash and send back to user
                 elif command == 'online':
                     if (argument in self.rooms.keys()) and (argument is not None):
-                        users_list = "\\online = " + "|".join(self.rooms[argument]['users'].keys())
+                        users_list = "\\online=" + "|".join(self.rooms[argument]['users'].keys())
                         socket.send(bytes(users_list, "utf8"))
                     else:
                         socket.send(bytes("\\online = invalid_room", "utf8"))
@@ -218,6 +223,8 @@ class Server:
             self.rooms[room]['users'][user_nick] = self.clients[user_nick]
             user_socket.send(bytes("\\join = success", "utf8"))
             self.room_announce("{nick} has joined the chat".format(nick=user_nick), room, user_socket, "Server")
+            # Server console feedback
+            self.ui_obj.console("'%s' joined '%s' room" % (user_nick, room))
         else:
             # Room does not exist
             user_socket.send(bytes("\\join = failure", "utf8"))
@@ -229,6 +236,9 @@ class Server:
             self.room_announce("{nick} has left the chat".format(nick=user_nick), self.clients[user_nick]['room'], user_socket, "Server")
             del self.rooms[self.clients[user_nick]['room']]['users'][user_nick]
             self.clients[user_nick]['room'] = None
+
+            # Server console feedback
+            self.ui_obj.console("'%s' is now outside of any room" % user_nick)
         else:
             user_socket.send(bytes("\\leave = no_room", "utf8"))
 
@@ -237,6 +247,9 @@ class Server:
         if (room_name not in self.rooms.keys()) and (room_name is not None):
             self.rooms[room_name] = {'users': {}}
             user_socket.send(bytes("\\create = success", "utf8"))
+
+            # Server console feedback
+            self.ui_obj.console("'%s' room has been created" % room_name)
         else:
             # Room already exists
             user_socket.send(bytes("\\create = failure", "utf8"))

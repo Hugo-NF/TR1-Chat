@@ -10,15 +10,15 @@ def receive(sockobj):
 
 serverHost = 'localhost'
 serverPort = 8080
-serverProtocol = 1
 
-sockobj = socket(AF_INET, SOCK_STREAM if serverProtocol else SOCK_DGRAM) #IP,  TCP
+sockobj = socket(AF_INET, SOCK_STREAM) #IP,  TCP
 
 try:
     sockobj.connect((serverHost, serverPort))
     print("Connected")
 except OSError:
     print("Failed to connect")
+    print(sys.exc_info())
     sys.exit()
 
 listening_thread = Thread(target=receive, args=(sockobj, ))
