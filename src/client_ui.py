@@ -63,8 +63,8 @@ class Ui_MainWindow(object):
         self.sendFrame.setTitle(_translate("MainWindow", "Send"))
         self.sendButton.setText(_translate("MainWindow", "Send"))
 
-    def write_message(self, username, msg_text):
-        self.textViewer.insertPlainText("\n[{username}]: {msg_text}".format(username=username, msg_text=msg_text))
+    def write_message(self, msg_text):
+        self.textViewer.insertPlainText("{msg_text}".format(msg_text=msg_text))
 
     def clear_message_box(self):
         self.messageEdit.clear()
