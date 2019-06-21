@@ -2,10 +2,15 @@ import sys
 from socket import *
 from threading import Thread
 
+run = True
+
 
 def receive(sockobj):
-    while True:
+    global run
+    while run:
         incoming = sockobj.recv(1024).decode("utf8")
+        if incoming == "\\quit=success":
+            run = False
         print(incoming)
 
 serverHost = 'localhost'
@@ -24,10 +29,9 @@ except OSError:
 listening_thread = Thread(target=receive, args=(sockobj, ))
 listening_thread.start()
 
-while True:
+while run:
+    print(run)
     sending = input()
-    if sending == "quit":
-        break
     sockobj.send(bytes(sending, "utf8"))  # Send a message to the server
 
 listening_thread.join(1)

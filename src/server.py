@@ -47,6 +47,10 @@ class Server:
             # From now on, we're allowed to receive connections
             self.listening_thread.start()
 
+            # This thread allow us to keep using the terminal
+            self.console_thread = Thread(target=self.console)
+            self.console_thread.start()
+
         except OSError:
             # Treating exception thrown by bind
             print(traceback.format_exc())
@@ -54,6 +58,8 @@ class Server:
 
     def stop_server(self):
         """Stops the server by joining all threads and closing the server socket"""
+        # TODO Fechar os sockets de todos os clientes
+
         # Joining all clients threads and clearing threads list
         for thread in self.client_threads:
             if thread.isAlive():
@@ -65,7 +71,6 @@ class Server:
             self.listening_thread.join(1)
 
         # Shutdown and close socket
-        self.socket.shutdown(2)
         self.socket.close()
 
         # Prints message to console and reconfigure buttons
@@ -81,7 +86,7 @@ class Server:
 
             # Feedback message informing who has just connected
             print("Connection established with {host}:{port}"
-                                .format(host=client_address[0], port=client_address[1]))
+                  .format(host=client_address[0], port=client_address[1]))
 
             # Create a new thread and insert it to server list
             new_thread = Thread(target=self.handle_connection, args=(client_address, client, ))
@@ -112,80 +117,91 @@ class Server:
         nick = ""
         insert_regexp = re.compile("^\\\(quit|insert)\s*(?:{(.*)})?$", re.MULTILINE)
 
-        # Loop to get user's nickname
-        while proceed:
-            # Retrieve message from socket, decode and match with regexp
-            message = socket.recv(self.buffer_size)
-            message_text = message.decode("utf8")
-            match = insert_regexp.match(message_text)
+        try:
+            # Loop to get user's nickname
+            while proceed:
+                # Retrieve message from socket, decode and match with regexp
+                message = socket.recv(self.buffer_size)
+                message_text = message.decode("utf8")
+                match = insert_regexp.match(message_text)
 
-            # If line matched, it means that user issued insert command
-            if match:
-                command, nick = match.groups()
-                if command == "quit":
-                    return
-                elif command == "insert" and nick is not None:
-                    if nick in self.clients.keys():
-                        socket.send(bytes("\\insert=not_valid_nickname", "utf8"))
-                    else:
-                        self.clients[nick] = {'address': address, 'socket': socket, 'room': None}
-                        proceed = False
-            else:
-                socket.send(bytes("\\insert=not_valid_nickname", "utf8"))
+                # If line matched, it means that user issued insert command
+                if match:
+                    command, nick = match.groups()
+                    if command == "quit":
+                        socket.send(bytes("\\quit=success", "utf8"))
+                        socket.close()
+                        print("(Address %s:%s) has quit" % (address[0], address[1]))
+                        return
+                    elif command == "insert" and nick is not None:
+                        if nick in self.clients.keys():
+                            socket.send(bytes("\\insert=not_valid_nickname", "utf8"))
+                        else:
+                            self.clients[nick] = {'address': address, 'socket': socket, 'room': None}
+                            proceed = False
+                else:
+                    socket.send(bytes("\\insert=not_valid_nickname", "utf8"))
 
-        # Server console feedback
-        print("Address %s:%s is now using '%s' nickname" % (address[0], address[1], nick))
+            # Server console feedback
+            print("Address %s:%s is now using '%s' nickname" % (address[0], address[1], nick))
 
-        # 'Infinity' loop
-        while True:
-            # Wait until receive a message
-            message = socket.recv(self.buffer_size)
-            message_text = message.decode("utf8")
+            # 'Infinity' loop
+            while True:
+                # Wait until receive a message
+                message = socket.recv(self.buffer_size)
+                message_text = message.decode("utf8")
 
-            # Tries to match message_text to regexp
-            match = self.commands_re.match(message_text)
-            if match:
-                command, argument = match.groups()
+                # Tries to match message_text to regexp
+                match = self.commands_re.match(message_text)
+                if match:
+                    command, argument = match.groups()
 
-                # Quit: broadcast advise to room, send confirmation to client and break outer loop to exit thread
-                if command == 'quit':
-                    self.leave_room(nick, socket)
-                    del self.clients[nick]
-                    socket.send(bytes("\\quit=success", "utf8"))
-                    socket.close()
-                    print("%s (address %s:%s) has quit" % (nick, address[0], address[1]))
-                    return
+                    # Quit: broadcast advise to room, send confirmation to client and break outer loop to exit thread
+                    if command == 'quit':
+                        self.leave_room(nick, socket)
+                        del self.clients[nick]
+                        socket.send(bytes("\\quit=success", "utf8"))
+                        socket.close()
+                        print("%s (address %s:%s) has quit" % (nick, address[0], address[1]))
+                        return
 
-                # Rooms: join all keys from rooms hash and send back to user
-                elif command == 'rooms':
-                    room_list = "\\rooms=" + "|".join(self.rooms.keys())
-                    socket.send(bytes(room_list, "utf8"))
+                    # Rooms: join all keys from rooms hash and send back to user
+                    elif command == 'rooms':
+                        room_list = "\\rooms=" + "|".join(self.rooms.keys())
+                        socket.send(bytes(room_list, "utf8"))
 
-                # Online: join all keys from rooms['room'] hash and send back to user
-                elif command == 'online':
-                    if (argument in self.rooms.keys()) and (argument is not None):
-                        users_list = "\\online=" + "|".join(self.rooms[argument]['users'].keys())
-                        socket.send(bytes(users_list, "utf8"))
-                    else:
-                        socket.send(bytes("\\online=no_room", "utf8"))
+                    # Online: join all keys from rooms['room'] hash and send back to user
+                    elif command == 'online':
+                        if (argument in self.rooms.keys()) and (argument is not None):
+                            users_list = "\\online=" + "|".join(self.rooms[argument]['users'].keys())
+                            socket.send(bytes(users_list, "utf8"))
+                        else:
+                            socket.send(bytes("\\online=no_room", "utf8"))
 
-                # Join: change 'room' value on user hash entry, add his entry to room,
-                # send confirmation and broadcast message to room
-                elif command == 'join':
-                    self.join_room(nick, argument, socket)
+                    # Join: change 'room' value on user hash entry, add his entry to room,
+                    # send confirmation and broadcast message to room
+                    elif command == 'join':
+                        self.join_room(nick, argument, socket)
 
-                # Leave: remove his entry from room, clear 'room' value on user hash entry,
-                # send confirmation and broadcast message to room
-                elif command == 'leave':
-                    self.leave_room(nick, socket)
+                    # Leave: remove his entry from room, clear 'room' value on user hash entry,
+                    # send confirmation and broadcast message to room
+                    elif command == 'leave':
+                        self.leave_room(nick, socket)
 
-                # Create: create new entry on rooms hash
-                elif command == 'create':
-                    self.create_room(argument, socket)
+                    # Create: create new entry on rooms hash
+                    elif command == 'create':
+                        self.create_room(argument, socket)
 
-            # The message was a normal text
-            else:
-                self.room_announce(message_text, self.clients[nick]['room'], socket, nick)
+                # The message was a normal text
+                else:
+                    self.room_announce(message_text, self.clients[nick]['room'], socket, nick)
+        except ConnectionResetError:
+            if nick != '':
+                self.leave_room(nick, socket)
+                del self.clients[nick]
+            socket.close()
+            print("%s (address %s:%s) has quit" % (nick, address[0], address[1]))
+            return
 
     def room_announce(self, msg, room, sender, prefix):
         """Send a message to all sockets given a valid room"""
@@ -241,43 +257,25 @@ class Server:
         for recipient in recipients:
             recipient.send(bytes("[{prefix}]: {msg}".format(prefix=prefix, msg=msg), "utf8"))
 
-
+    def console(self):
+        while True:
+            command = input()
+            if command == "quit":
+                self.stop_server()
+                break
 
 
 if __name__ == "__main__":
-    valid = False
-    host, port, buffer_size, backlog = 0, 0, 0, 0
-    while not valid:
-        try:
-            host = input()
-            port = int(input())
-            buffer_size = int(input())
-            backlog = int(input())
-            valid = True
-        except ValueError:
-            print("Verifique os dados inseridos!")
+    # valid = False
+    # host, port, buffer_size, backlog = 0, 0, 0, 0
+    # while not valid:
+    #     try:
+    #         host = input("Host (127.0.0.1):")
+    #         port = int(input("Port (8080):"))
+    #         buffer_size = int(input("Buffer Size (1024):"))
+    #         backlog = int(input("Backlog (10):"))
+    #         valid = True
+    #     except ValueError:
+    #         print("Verifique os dados inseridos!")
 
-    server = Server(host, port, buffer_size, backlog)
-
-    #app = QApplication(sys.argv)
-
-    # Application name (display at windows and OS process)
-    #app.setApplicationDisplayName("Concord Server")
-    #app.setApplicationName("Concord Server")
-
-    #main_ui = Ui_serverWindow()
-    #main_window = ServerWindow()
-
-    # Draw the window
-    #main_ui.setupUi(main_window)
-
-    # Application initial size
-    #main_window.resize(1024, 768)
-
-    # Build a server object
-    #server = Server(main_ui)
-
-    # Show screen to user
-    #main_window.show()
-
-    #sys.exit(app.exec_())
+    server = Server()
