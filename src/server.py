@@ -1,47 +1,30 @@
 from socket import *                                            # Socket programming
 from threading import Thread                                    # Python Threads
-import re                                                       # Regular expressions
-import sys
+import re
 import traceback
-
-from PyQt5.QtWidgets import QApplication                        # PyQt framework
-from PyQt5 import QtCore
-from src.server_ui import Ui_serverWindow, ServerWindow         # Created Qt interfaces
 
 
 class Server:
     """Implements a multi-threaded server for a asynchronous chat application"""
 
-    def __init__(self, ui_obj, host="127.0.0.1", port=8080, buffer_size=1024, backlog=10):
+    def __init__(self, host="127.0.0.1", port=8080, buffer_size=1024, backlog=10):
         # Data management
         self.clients = {}
         self.rooms = {}
 
+        # Setting socket properties
+        self.host = host
+        self.port = port
+        self.buffer_size = buffer_size
+        self.backlog = backlog
+        self.own_address = (self.host, self.port)
+
         # Regexp to easily switch between commands
         self.commands_re = re.compile("^\\\(quit|leave|join|rooms|online|create)(?:\s*{(.*)})?$", re.MULTILINE)
 
-        # GUI object configuration
-        self.ui_obj = ui_obj
-        # Translate object to multi-language application (if needed)
-        self._translate = QtCore.QCoreApplication.translate
         # Prints a welcome message to console
-        self.ui_obj.console("Welcome to Concord Server v.0.0.1\n"
-                            "This program is under GNU General Public License v3.0\n")
-
-        # Connects run and stop button to correspondent actions
-        self.ui_obj.runButton.clicked.connect(self.start_server)
-        self.ui_obj.stopButton.clicked.connect(self.stop_server)
-        self.ui_obj.stopButton.setDisabled(True)
-
-    def start_server(self):
-        """Initiates the server by binding it's address and starting dispatcher thread"""
-
-        # Setting socket properties
-        self.host = self.ui_obj.hostEdit.text()
-        self.port = self.ui_obj.portEdit.value()
-        self.buffer_size = self.ui_obj.buffEdit.value()
-        self.backlog = self.ui_obj.backlogEdit.value()
-        self.own_address = (self.host, self.port)
+        print("Welcome to Concord Server v.0.0.1\n"
+              "This program is under GNU General Public License v3.0\n")
 
         # Create TCP socket with user selected properties.
         # setsockopt allows this socket to reuse the same address
@@ -56,9 +39,7 @@ class Server:
             self.socket.listen(self.backlog)
 
             # Prints console feedback message and reconfigure the buttons
-            self.ui_obj.console("Server is up and running! Waiting for connections...")
-            self.ui_obj.runButton.setDisabled(True)
-            self.ui_obj.stopButton.setDisabled(False)
+            print("Server is up and running! Waiting for connections...")
 
             # Set up threads
             self.listening_thread = Thread(target=self.listen)
@@ -68,10 +49,8 @@ class Server:
 
         except OSError:
             # Treating exception thrown by bind
-            self.ui_obj.console("<span style=\" color: #ff0000;\">{traceback}</span>"
-                                .format(traceback=traceback.format_exc().replace("\n", "<br>")))
-            self.ui_obj.console("<span style=\" color: #ff0000;\">Could not start server at address {addr}. "
-                                "Check your configuration and try again</span>".format(addr=self.own_address))
+            print(traceback.format_exc())
+            print("Check your configuration and try again")
 
     def stop_server(self):
         """Stops the server by joining all threads and closing the server socket"""
@@ -90,9 +69,7 @@ class Server:
         self.socket.close()
 
         # Prints message to console and reconfigure buttons
-        self.ui_obj.console("Server successfully shutdown")
-        self.ui_obj.runButton.setDisabled(False)
-        self.ui_obj.stopButton.setDisabled(True)
+        print("Server successfully shutdown")
 
     def listen(self):
         """Listen to network and starts the handling of upcoming connections,
@@ -103,7 +80,7 @@ class Server:
             client, client_address = self.socket.accept()
 
             # Feedback message informing who has just connected
-            self.ui_obj.console("Connection established with {host}:{port}"
+            print("Connection established with {host}:{port}"
                                 .format(host=client_address[0], port=client_address[1]))
 
             # Create a new thread and insert it to server list
@@ -128,7 +105,7 @@ class Server:
         """
 
         # Server console feedback
-        self.ui_obj.console("Thread started for address %s:%s" % (address[0], address[1]))
+        print("Thread started for address %s:%s" % (address[0], address[1]))
 
         # Initial conditions
         proceed = True
@@ -157,7 +134,7 @@ class Server:
                 socket.send(bytes("\\insert=not_valid_nickname", "utf8"))
 
         # Server console feedback
-        self.ui_obj.console("Address %s:%s is now using '%s' nickname" % (address[0], address[1], nick))
+        print("Address %s:%s is now using '%s' nickname" % (address[0], address[1], nick))
 
         # 'Infinity' loop
         while True:
@@ -176,7 +153,7 @@ class Server:
                     del self.clients[nick]
                     socket.send(bytes("\\quit=success", "utf8"))
                     socket.close()
-                    self.ui_obj.console("%s (address %s:%s) has quit" % (nick, address[0], address[1]))
+                    print("%s (address %s:%s) has quit" % (nick, address[0], address[1]))
                     return
 
                 # Rooms: join all keys from rooms hash and send back to user
@@ -226,7 +203,7 @@ class Server:
             user_socket.send(bytes("\\join=success", "utf8"))
             self.room_announce("{nick} has joined the chat".format(nick=user_nick), room, user_socket, "Server")
             # Server console feedback
-            self.ui_obj.console("'%s' joined '%s' room" % (user_nick, room))
+            print("'%s' joined '%s' room" % (user_nick, room))
         else:
             # Room does not exist
             user_socket.send(bytes("\\join=failure", "utf8"))
@@ -240,7 +217,7 @@ class Server:
             self.clients[user_nick]['room'] = None
 
             # Server console feedback
-            self.ui_obj.console("'%s' is now outside of any room" % user_nick)
+            print("'%s' is now outside of any room" % user_nick)
         else:
             user_socket.send(bytes("\\leave=no_room", "utf8"))
 
@@ -251,7 +228,7 @@ class Server:
             user_socket.send(bytes("\\create=success", "utf8"))
 
             # Server console feedback
-            self.ui_obj.console("'%s' room has been created" % room_name)
+            print("'%s' room has been created" % room_name)
         else:
             # Room already exists
             user_socket.send(bytes("\\create=failure", "utf8"))
@@ -265,26 +242,42 @@ class Server:
             recipient.send(bytes("[{prefix}]: {msg}".format(prefix=prefix, msg=msg), "utf8"))
 
 
+
+
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
+    valid = False
+    host, port, buffer_size, backlog = 0, 0, 0, 0
+    while not valid:
+        try:
+            host = input()
+            port = int(input())
+            buffer_size = int(input())
+            backlog = int(input())
+            valid = True
+        except ValueError:
+            print("Verifique os dados inseridos!")
+
+    server = Server(host, port, buffer_size, backlog)
+
+    #app = QApplication(sys.argv)
 
     # Application name (display at windows and OS process)
-    app.setApplicationDisplayName("Concord Server")
-    app.setApplicationName("Concord Server")
+    #app.setApplicationDisplayName("Concord Server")
+    #app.setApplicationName("Concord Server")
 
-    main_ui = Ui_serverWindow()
-    main_window = ServerWindow()
+    #main_ui = Ui_serverWindow()
+    #main_window = ServerWindow()
 
     # Draw the window
-    main_ui.setupUi(main_window)
+    #main_ui.setupUi(main_window)
 
     # Application initial size
-    main_window.resize(1024, 768)
+    #main_window.resize(1024, 768)
 
     # Build a server object
-    server = Server(main_ui)
+    #server = Server(main_ui)
 
     # Show screen to user
-    main_window.show()
+    #main_window.show()
 
-    sys.exit(app.exec_())
+    #sys.exit(app.exec_())
