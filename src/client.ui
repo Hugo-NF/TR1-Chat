@@ -9,9 +9,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>867</width>
-    <height>598</height>
+    <width>917</width>
+    <height>437</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>Concord</string>
@@ -19,51 +25,70 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QCommandLinkButton" name="connectionButton">
-      <property name="text">
-       <string>Connection</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QCommandLinkButton" name="roomsButton">
-      <property name="text">
-       <string>Rooms</string>
-      </property>
-     </widget>
+     <layout class="QVBoxLayout" name="optionsLayout">
+      <item>
+       <widget class="QCommandLinkButton" name="connectionButton">
+        <property name="text">
+         <string>Connection</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCommandLinkButton" name="roomsButton">
+        <property name="text">
+         <string>Rooms</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
     <item>
      <widget class="QSplitter" name="splitter">
       <property name="orientation">
-       <enum>Qt::Vertical</enum>
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="handleWidth">
+       <number>4</number>
       </property>
       <widget class="QGroupBox" name="chatFrame">
        <property name="title">
         <string>Chat</string>
        </property>
-       <layout class="QHBoxLayout" name="horizontalLayout">
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
          <widget class="QTextBrowser" name="textViewer"/>
         </item>
        </layout>
       </widget>
-      <widget class="QGroupBox" name="sendFrame">
+      <widget class="QGroupBox" name="onlineFrame">
        <property name="title">
-        <string>Send</string>
+        <string>Online</string>
        </property>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
         <item>
-         <widget class="QTextEdit" name="messageEdit"/>
-        </item>
-        <item>
-         <widget class="QPushButton" name="sendButton">
-          <property name="text">
-           <string>Send</string>
-          </property>
-         </widget>
+         <widget class="QListWidget" name="onlineList"/>
         </item>
        </layout>
       </widget>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="sendFrame">
+      <property name="title">
+       <string>Send</string>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QLineEdit" name="sendEdit"/>
+       </item>
+       <item>
+        <widget class="QPushButton" name="sendButton">
+         <property name="text">
+          <string>Send</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
     </item>
    </layout>

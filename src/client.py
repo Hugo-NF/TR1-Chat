@@ -26,7 +26,6 @@ class Client:
         self.main_ui.sendButton.clicked.connect(self.send_action)
         self.main_ui.sendButton.setDisabled(True)
         self.main_ui.roomsButton.hide()
-        self.rooms_ui.saveButton.clicked.connect(self.create_user)
         self.rooms_ui.createButton.clicked.connect(self.create_room)
         self.conn_ui.connectionProgress.hide()
         self.conn_ui.connectButton.clicked.connect(lambda: self.connect(self.conn_ui.hostEdit.text(),
@@ -229,7 +228,8 @@ if __name__ == "__main__":
     main_ui.roomsButton.clicked.connect(rooms_dialog.show)
 
     # Application initial size
-    main_window.resize(1024, 768)
+    main_window.resize(917, 437)
+    main_window.setFixedSize(917, 437)
 
     # Show screen to user
     main_window.show()
