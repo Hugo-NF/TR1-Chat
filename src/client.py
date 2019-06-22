@@ -17,25 +17,40 @@ class Client:
 
     def __init__(self, main_ui, rooms_ui, conn_ui):
         """Initializes the client side application with UI objects"""
-        # UI object
+        # Set UI objects
         self.main_ui = main_ui
         self.rooms_ui = rooms_ui
         self.conn_ui = conn_ui
+
+        # Regexp to handle server answer
         self.answers_regexp = re.compile("^\\\(insert|quit|rooms|online|server|join|leave|create)=(.*)$")
 
+        # UI initial state
+        # Bind send button to send message
         self.main_ui.sendButton.clicked.connect(self.send_action)
+        # Send button initiates disabled
         self.main_ui.sendButton.setDisabled(True)
+        # Rooms button initiates hidden
         self.main_ui.roomsButton.hide()
-        self.rooms_ui.createButton.clicked.connect(self.create_room)
+        # Connection progress bar initiates hidden
         self.conn_ui.connectionProgress.hide()
+        # Bind connect button to connect with server
         self.conn_ui.connectButton.clicked.connect(lambda: self.connect(self.conn_ui.hostEdit.text(),
                                                                         self.conn_ui.portEdit.text()))
-        self.rooms_ui.roomsList.itemDoubleClicked.connect(lambda: self.get_users(
-            self.rooms_ui.roomsList.currentItem()))
-
+        # Bind submit button to send nickname
+        self.conn_ui.submitButton.clicked.connect(lambda: self.create_user(self.conn_ui.nicknameEdit.text()))
+        # Bind create button
+        self.rooms_ui.createButton.clicked.connect(self.create_room)
+        # Bind join button
         self.rooms_ui.joinButton.clicked.connect(self.join_room)
+        # Bind leave button
         self.rooms_ui.leaveButton.clicked.connect(self.leave_room)
+        # Leave button initiates
         self.rooms_ui.leaveButton.setDisabled(True)
+        # Bind refresh button
+        self.rooms_ui.refreshButton.clicked.connect(self.get_rooms)
+        # Bind enter button
+        self.main_ui.sendEdit.returnPressed.connect(self.send_action)
 
     def connect(self, host, port):
         """Tries to connect client application with server within host:port"""
@@ -49,19 +64,20 @@ class Client:
             self.socket.connect(self.conn_address)
 
             QMessageBox.information(None, 'Connected',
-                                    "Successfully connected, you may now close connection dialog", QMessageBox.Ok)
+                                    "Successfully connected. Now, please, choose a nice nickname", QMessageBox.Ok)
 
             self.conn_ui.connectionProgress.setMaximum(100)
             self.conn_ui.connectionProgress.setValue(100)
             self.conn_ui.connectionProgress.setFormat("Connected")
             self.conn_ui.connectButton.setDisabled(True)
-            self.main_ui.sendButton.setDisabled(False)
             self.main_ui.connectionButton.setText("Disconnect")
             self.main_ui.connectionButton.clicked.connect(self.disconnect)
-            self.main_ui.roomsButton.show()
 
             self.listening_thread = Thread(target=self.listen)
             self.listening_thread.start()
+
+            self.conn_ui.nicknameEdit.setDisabled(False)
+            self.conn_ui.submitButton.setDisabled(False)
 
         except TypeError:
             QMessageBox.warning(None, 'Error', "Check your HOST:PORT configuration",
@@ -90,6 +106,9 @@ class Client:
         self.conn_ui.connectionProgress.setValue(-1)
         self.conn_ui.connectionProgress.hide()
         self.conn_ui.connectButton.setDisabled(False)
+        self.conn_ui.nicknameEdit.setDisabled(True)
+        self.conn_ui.nicknameEdit.setText("")
+        self.conn_ui.submitButton.setDisabled(True)
         self.main_ui.roomsButton.hide()
 
     def listen(self):
@@ -112,21 +131,22 @@ class Client:
 
     def create_room(self):
         room = self.rooms_ui.roomNameEdit.text()
-        self.socket.send(bytes("\\create{%s}" % room, "utf8"))
-        self.get_rooms()
+        if room != "":
+            self.socket.send(bytes("\\create{%s}" % room, "utf8"))
 
-    def create_user(self):
-        nick = self.rooms_ui.displayNameEdit.text()
-        self.socket.send(bytes("\\insert{%s}" % nick, "utf8"))
-        self.rooms_ui.displayNameEdit.setDisabled(True)
-        self.rooms_ui.saveButton.setDisabled(True)
-        self.get_rooms()
+    def create_user(self, nick):
+        if nick != "":
+            # Send nick to server
+            self.socket.send(bytes("\\insert{%s}" % nick, "utf8"))
+            # Disable nickname fields
+            self.conn_ui.nicknameEdit.setDisabled(True)
+            self.conn_ui.submitButton.setDisabled(True)
+            self.main_ui.roomsButton.show()
 
     def get_rooms(self):
         self.socket.send(bytes("\\rooms", "utf8"))
 
-    def get_users(self, item):
-        room = item.text()
+    def get_users(self, room):
         self.socket.send(bytes("\\online{%s}" % room, "utf8"))
 
     def join_room(self):
@@ -135,6 +155,8 @@ class Client:
             self.socket.send(bytes("\\join{%s}" % item.text(), "utf8"))
             self.rooms_ui.leaveButton.setDisabled(False)
             self.rooms_ui.joinButton.setDisabled(True)
+            self.main_ui.sendButton.setDisabled(False)
+            self.main_ui.sendEdit.setDisabled(False)
         else:
             QMessageBox.warning(None, "Joining a room", "You must select a room", QMessageBox.Ok)
 
@@ -142,6 +164,8 @@ class Client:
         self.socket.send(bytes("\\leave", "utf8"))
         self.rooms_ui.leaveButton.setDisabled(True)
         self.rooms_ui.joinButton.setDisabled(False)
+        self.main_ui.sendButton.setDisabled(True)
+        self.main_ui.sendEdit.setDisabled(True)
 
     def treat_message(self, message):
         answer = True
@@ -150,6 +174,9 @@ class Client:
             command, answer = match.groups()
             if command == "insert":
                 if answer == "not_valid_nickname":
+                    self.conn_ui.nicknameEdit.setDisabled(False)
+                    self.conn_ui.submitButton.setDisabled(False)
+                    self.main_ui.roomsButton.hide()
                     QMessageBox.critical(None, "Login",
                                          "Nickname not valid", QMessageBox.Ok)
             elif command == "quit":
@@ -158,7 +185,6 @@ class Client:
 
             elif command == "rooms":
                 if answer != "":
-                    print(answer)
                     self.rooms_ui.clear_rooms()
                     for room in answer.split("|"):
                         self.rooms_ui.add_room(room)
@@ -168,15 +194,12 @@ class Client:
             elif command == "online":
                 if answer == "no_room":
                     QMessageBox.critical(None, "Online",
-                                         "You must specify a room", QMessageBox.Ok)
+                                         "You must specify a valid room", QMessageBox.Ok)
                 else:
+                    self.main_ui.online_clear()
                     if answer != "":
-                        print(answer)
-                        self.rooms_ui.clear_users()
                         for user in answer.split("|"):
-                            self.rooms_ui.add_user(user)
-                    else:
-                        self.rooms_ui.clear_users()
+                            self.main_ui.online_add(user)
 
             elif command == "server":
                 if answer == "no_room":

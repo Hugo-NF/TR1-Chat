@@ -29,7 +29,6 @@ class Server:
         # Create TCP socket with user selected properties.
         # setsockopt allows this socket to reuse the same address
         self.socket = socket(AF_INET, SOCK_STREAM)
-        self.socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 
         try:
             # Bind the socket to address.
@@ -58,18 +57,18 @@ class Server:
 
     def stop_server(self):
         """Stops the server by joining all threads and closing the server socket"""
-        # TODO Fechar os sockets de todos os clientes
+
+        # Closing socket of all clients
+        for client in self.clients.values():
+            client['socket'].close()
+        del self.clients
+        del self.rooms
 
         # Joining all clients threads and clearing threads list
         for thread in self.client_threads:
             if thread.isAlive():
                 thread.join(1)
         self.client_threads.clear()
-
-        for client in self.clients.values():
-            client['socket'].close()
-        del self.clients
-        del self.rooms
 
         # Joining listening thread
         if self.listening_thread.isAlive():
@@ -177,11 +176,8 @@ class Server:
 
                     # Online: join all keys from rooms['room'] hash and send back to user
                     elif command == 'online':
-                        if (argument in self.rooms.keys()) and (argument is not None):
-                            users_list = "\\online=" + "|".join(self.rooms[argument]['users'].keys())
-                            socket.send(bytes(users_list, "utf8"))
-                        else:
-                            socket.send(bytes("\\online=no_room", "utf8"))
+                        answer = self.get_online_users(argument)
+                        socket.send(bytes(answer, "utf8"))
 
                     # Join: change 'room' value on user hash entry, add his entry to room,
                     # send confirmation and broadcast message to room
@@ -199,22 +195,35 @@ class Server:
 
                 # The message was a normal text
                 else:
-                    self.room_announce(message_text, self.clients[nick]['room'], socket, nick)
+                    self.room_announce(message_text, self.clients[nick]['room'], nick)
         except ConnectionResetError:
             if nick != '':
-                self.leave_room(nick, socket)
+                self.room_announce("{nick} has left the chat".format(nick=nick), self.clients[nick]['room'], "Server")
+                del self.rooms[self.clients[nick]['room']]['users'][nick]
+                del self.clients[nick]
+            socket.close()
+            print("%s (address %s:%s) has quit" % (nick, address[0], address[1]))
+            return
+        except BrokenPipeError:
+            if nick != '':
+                del self.rooms[self.clients[nick]['room']]['users'][nick]
                 del self.clients[nick]
             socket.close()
             print("%s (address %s:%s) has quit" % (nick, address[0], address[1]))
             return
 
-    def room_announce(self, msg, room, sender, prefix):
+    def room_announce(self, msg, room, prefix):
         """Send a message to all sockets given a valid room"""
         # The following condition assumes that rooms_hash will be accessed within function call
         if room is not None:
             Server.broadcast(msg, [client['socket'] for client in self.rooms[room]['users'].values()], prefix)
+
+    def get_online_users(self, room):
+        if (room in self.rooms.keys()) and (room is not None):
+            users_list = "\\online=" + "|".join(self.rooms[room]['users'].keys())
+            return users_list
         else:
-            sender.send(bytes("\\server=no_room", "utf8"))
+            return "\\online=no_room"
 
     def join_room(self, user_nick, room, user_socket):
         """Insert user in a room"""
@@ -222,7 +231,7 @@ class Server:
             self.clients[user_nick]['room'] = room
             self.rooms[room]['users'][user_nick] = self.clients[user_nick]
             user_socket.send(bytes("\\join=success", "utf8"))
-            self.room_announce("{nick} has joined the chat".format(nick=user_nick), room, user_socket, "Server")
+            self.room_announce(self.get_online_users(room), room, "")
             # Server console feedback
             print("'%s' joined '%s' room" % (user_nick, room))
         else:
@@ -233,8 +242,12 @@ class Server:
         """Remove user from room"""
         if self.clients[user_nick]['room'] is not None:
             user_socket.send(bytes("\\leave=success", "utf8"))
-            self.room_announce("{nick} has left the chat".format(nick=user_nick), self.clients[user_nick]['room'], user_socket, "Server")
             del self.rooms[self.clients[user_nick]['room']]['users'][user_nick]
+            # Deletes empty room
+            if len(self.rooms[self.clients[user_nick]['room']]['users']) == 0:
+                del self.rooms[self.clients[user_nick]['room']]
+            else:
+                self.room_announce(self.get_online_users(self.clients[user_nick]['room']), self.clients[user_nick]['room'], "")
             self.clients[user_nick]['room'] = None
 
             # Server console feedback
@@ -257,10 +270,13 @@ class Server:
     @staticmethod
     def broadcast(msg, recipients, prefix):
         """Static method that sends a message to all socket in recipients list, prefix is for an identification tag"""
-
-        # Prefix is for name identification.
-        for recipient in recipients:
-            recipient.send(bytes("[{prefix}]: {msg}".format(prefix=prefix, msg=msg), "utf8"))
+        if prefix != "":
+            # Prefix is for name identification.
+            for recipient in recipients:
+                recipient.send(bytes("[{prefix}]: {msg}".format(prefix=prefix, msg=msg), "utf8"))
+        else:
+            for recipient in recipients:
+                recipient.send(bytes(msg, "utf8"))
 
     def console(self):
         while True:

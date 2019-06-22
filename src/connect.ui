@@ -73,7 +73,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="nicknameEdit"/>
+      <widget class="QLineEdit" name="nicknameEdit">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
@@ -105,6 +109,16 @@
       </size>
      </property>
     </spacer>
+   </item>
+   <item row="2" column="2">
+    <widget class="QPushButton" name="submitButton">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string>Submit</string>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

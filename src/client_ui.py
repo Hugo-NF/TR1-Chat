@@ -82,14 +82,19 @@ class Ui_MainWindow(object):
         self.sendButton.setText(_translate("MainWindow", "Send"))
 
     def write_message(self, msg_text):
-        self.textViewer.insertPlainText("{msg_text}\n".format(msg_text=msg_text))
+        self.textViewer.append(msg_text)
 
     def clear_message_box(self):
         self.sendEdit.clear()
 
     def read_message_box(self):
-        return self.sendEdit.toPlainText()
+        return self.sendEdit.text()
 
+    def online_add(self, user):
+        self.onlineList.addItem(user)
+
+    def online_clear(self):
+        self.onlineList.clear()
 
 class ClientWindow(QMainWindow):
     def closeEvent(self, event):

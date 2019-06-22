@@ -42,6 +42,7 @@ class Ui_connectionDialog(object):
         self.nicknameLabel.setObjectName("nicknameLabel")
         self.horizontalLayout_3.addWidget(self.nicknameLabel)
         self.nicknameEdit = QtWidgets.QLineEdit(connectionDialog)
+        self.nicknameEdit.setEnabled(False)
         self.nicknameEdit.setObjectName("nicknameEdit")
         self.horizontalLayout_3.addWidget(self.nicknameEdit)
         self.gridLayout.addLayout(self.horizontalLayout_3, 2, 0, 1, 1)
@@ -54,6 +55,10 @@ class Ui_connectionDialog(object):
         self.gridLayout.addWidget(self.connectionProgress, 0, 2, 1, 1)
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.gridLayout.addItem(spacerItem, 1, 1, 1, 1)
+        self.submitButton = QtWidgets.QPushButton(connectionDialog)
+        self.submitButton.setEnabled(False)
+        self.submitButton.setObjectName("submitButton")
+        self.gridLayout.addWidget(self.submitButton, 2, 2, 1, 1)
 
         self.retranslateUi(connectionDialog)
         QtCore.QMetaObject.connectSlotsByName(connectionDialog)
@@ -72,5 +77,6 @@ class Ui_connectionDialog(object):
         self.portEdit.setPlaceholderText(_translate("connectionDialog", "8080"))
         self.connectButton.setText(_translate("connectionDialog", "Connect"))
         self.nicknameLabel.setText(_translate("connectionDialog", "Nickname:"))
+        self.submitButton.setText(_translate("connectionDialog", "Submit"))
 
 
