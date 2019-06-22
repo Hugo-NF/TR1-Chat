@@ -51,6 +51,9 @@ class Ui_MainWindow(object):
         self.onlineList = QtWidgets.QListWidget(self.onlineFrame)
         self.onlineList.setObjectName("onlineList")
         self.horizontalLayout_3.addWidget(self.onlineList)
+        self.refreshButton = QtWidgets.QPushButton(self.onlineFrame)
+        self.refreshButton.setObjectName("refreshButton")
+        self.horizontalLayout_3.addWidget(self.refreshButton)
         self.verticalLayout.addWidget(self.splitter)
         self.sendFrame = QtWidgets.QGroupBox(self.centralwidget)
         self.sendFrame.setObjectName("sendFrame")
@@ -78,11 +81,16 @@ class Ui_MainWindow(object):
         self.roomsButton.setText(_translate("MainWindow", "Rooms"))
         self.chatFrame.setTitle(_translate("MainWindow", "Chat"))
         self.onlineFrame.setTitle(_translate("MainWindow", "Online"))
+        self.refreshButton.setText(_translate("MainWindow", "Refresh"))
         self.sendFrame.setTitle(_translate("MainWindow", "Send"))
         self.sendButton.setText(_translate("MainWindow", "Send"))
 
     def write_message(self, msg_text):
+        """Adds a new message to chat box"""
+        # Add a new message to message box UI
         self.textViewer.append(msg_text)
+        # Scroll to the end
+        self.textViewer.moveCursor(QtGui.QTextCursor.End)
 
     def clear_message_box(self):
         self.sendEdit.clear()
@@ -95,6 +103,7 @@ class Ui_MainWindow(object):
 
     def online_clear(self):
         self.onlineList.clear()
+
 
 class ClientWindow(QMainWindow):
     def closeEvent(self, event):

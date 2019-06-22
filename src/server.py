@@ -8,6 +8,13 @@ class Server:
     """Implements a multi-threaded server for a asynchronous chat application"""
 
     def __init__(self, host="127.0.0.1", port=8080, buffer_size=1024, backlog=10):
+        """
+        Constructs an object of the Class Server
+        :param host: IP address of the server
+        :param port: Port which server will use
+        :param buffer_size: Determines the amount of bytes retrieved from the network per reading
+        :param backlog: Determines the amount of clients that may wait for the server
+        """
         # Data management
         self.clients = {}
         self.rooms = {}
@@ -23,11 +30,10 @@ class Server:
         self.commands_re = re.compile("^\\\(quit|leave|join|rooms|online|create)(?:\s*{(.*)})?$", re.MULTILINE)
 
         # Prints a welcome message to console
-        print("Welcome to Concord Server v.0.0.1\n"
+        print("\nWelcome to Concord Server v.0.9.2\n"
               "This program is under GNU General Public License v3.0\n")
 
         # Create TCP socket with user selected properties.
-        # setsockopt allows this socket to reuse the same address
         self.socket = socket(AF_INET, SOCK_STREAM)
 
         try:
@@ -56,7 +62,9 @@ class Server:
             print("Check your configuration and try again")
 
     def stop_server(self):
-        """Stops the server by joining all threads and closing the server socket"""
+        """
+        Stops the server by joining all threads and closing the server socket
+        """
 
         # Closing socket of all clients
         for client in self.clients.values():
@@ -74,25 +82,27 @@ class Server:
         if self.listening_thread.isAlive():
             self.listening_thread.join(1)
 
-        # Shutdown and close socket
+        # Close socket
         self.socket.close()
 
-        # Prints message to console and reconfigure buttons
+        # Prints message to terminal
         print("Server successfully shutdown")
 
     def listen(self):
-        """Listen to network and starts the handling of upcoming connections,
-        this is the target for dispatcher thread"""
+        """
+        Listen to network and starts the handling of upcoming connections,
+        this is the target for dispatcher thread
+        """
 
         while True:
             # Blocking socket call waiting for client connection
             client, client_address = self.socket.accept()
 
-            # Feedback message informing who has just connected
+            # Prints message to terminal
             print("Connection established with {host}:{port}"
                   .format(host=client_address[0], port=client_address[1]))
 
-            # Create a new thread and insert it to server list
+            # Creates a new thread and insert it to server list
             new_thread = Thread(target=self.handle_connection, args=(client_address, client, ))
             self.client_threads.append(new_thread)
             new_thread.start()
@@ -100,9 +110,8 @@ class Server:
     def handle_connection(self, address, socket):
         """
         Handles a connection with one client, this is the target for each worker thread
-        Params:
-        1. address = tuple with IP (string) and port (integer) of connected user, e.g ('127.0.0.1', 8080)
-        2. socket = Python socket object already connected to address
+        :param address: tuple with IP (string) and port (integer) of connected user, e.g ('127.0.0.1', 8080)
+        :param socket: Python socket object already connected to address
 
         Description:
         1. Retrieve user's nickname that will be used for entire section
@@ -113,7 +122,7 @@ class Server:
                 * If it's a command, execute correspondent action
         """
 
-        # Server console feedback
+        # Prints message to terminal
         print("Thread started for address %s:%s" % (address[0], address[1]))
 
         # Initial conditions
@@ -138,15 +147,17 @@ class Server:
                         print("(Address %s:%s) has quit" % (address[0], address[1]))
                         return
                     elif command == "insert" and nick is not None:
+                        # Nickname is already in use
                         if nick in self.clients.keys():
                             socket.send(bytes("\\insert=not_valid_nickname", "utf8"))
+                        # Adds client to list
                         else:
                             self.clients[nick] = {'address': address, 'socket': socket, 'room': None}
                             proceed = False
                 else:
                     socket.send(bytes("\\insert=not_valid_nickname", "utf8"))
 
-            # Server console feedback
+            # Prints message to terminal
             print("Address %s:%s is now using '%s' nickname" % (address[0], address[1], nick))
 
             # 'Infinity' loop
@@ -166,6 +177,7 @@ class Server:
                         del self.clients[nick]
                         socket.send(bytes("\\quit=success", "utf8"))
                         socket.close()
+                        # Prints message to terminal
                         print("%s (address %s:%s) has quit" % (nick, address[0], address[1]))
                         return
 
@@ -193,15 +205,18 @@ class Server:
                     elif command == 'create':
                         self.create_room(argument, socket)
 
-                # The message was a normal text
+                # The message was a normal text, broadcast it to room users
                 else:
                     self.room_announce(message_text, self.clients[nick]['room'], nick)
+
+        # Exceptions to handle inadequate user quitting
         except ConnectionResetError:
             if nick != '':
                 self.room_announce("{nick} has left the chat".format(nick=nick), self.clients[nick]['room'], "Server")
                 del self.rooms[self.clients[nick]['room']]['users'][nick]
                 del self.clients[nick]
             socket.close()
+            # Prints message to terminal
             print("%s (address %s:%s) has quit" % (nick, address[0], address[1]))
             return
         except BrokenPipeError:
@@ -209,16 +224,28 @@ class Server:
                 del self.rooms[self.clients[nick]['room']]['users'][nick]
                 del self.clients[nick]
             socket.close()
+            # Prints message to terminal
             print("%s (address %s:%s) has quit" % (nick, address[0], address[1]))
             return
 
     def room_announce(self, msg, room, prefix):
-        """Send a message to all sockets given a valid room"""
+        """
+        Send a message to all sockets given a valid room
+        :param msg: Message string to be sent
+        :param room: Destination room
+        :param prefix: Prefix for message tag sender identification
+        """
         # The following condition assumes that rooms_hash will be accessed within function call
         if room is not None:
             Server.broadcast(msg, [client['socket'] for client in self.rooms[room]['users'].values()], prefix)
 
     def get_online_users(self, room):
+        """
+        Builds a string with all online users of a valid room
+        :param room: Target room to get users
+        :return: String ready to be sent to some client
+        """
+        # Checks if room exists
         if (room in self.rooms.keys()) and (room is not None):
             users_list = "\\online=" + "|".join(self.rooms[room]['users'].keys())
             return users_list
@@ -226,77 +253,122 @@ class Server:
             return "\\online=no_room"
 
     def join_room(self, user_nick, room, user_socket):
-        """Insert user in a room"""
+        """
+        Insert a user in a room
+        :param user_nick: Nick of the user who made the request
+        :param room: Name of the room which he wants to join
+        :param user_socket: Socket connected to the user
+        """
+        # Checks if room exists
         if (room in self.rooms.keys()) and (room is not None):
+            # Changes clients dict
             self.clients[user_nick]['room'] = room
+            # Add to room dict
             self.rooms[room]['users'][user_nick] = self.clients[user_nick]
+            # Send user confirmation
             user_socket.send(bytes("\\join=success", "utf8"))
+            # Updates list of online users
             self.room_announce(self.get_online_users(room), room, "")
-            # Server console feedback
+            # Prints message to terminal
             print("'%s' joined '%s' room" % (user_nick, room))
         else:
             # Room does not exist
             user_socket.send(bytes("\\join=failure", "utf8"))
 
     def leave_room(self, user_nick, user_socket):
-        """Remove user from room"""
-        if self.clients[user_nick]['room'] is not None:
+        """
+        Removes a user from current room
+        :param user_nick: Nick of the user who made the request
+        :param user_socket: Socket connected to the user
+        """
+        # Checks if the user is actually joined to any room
+        room_name = self.clients[user_nick]['room']
+        if room_name is not None:
+            # Send user confirmation
             user_socket.send(bytes("\\leave=success", "utf8"))
-            del self.rooms[self.clients[user_nick]['room']]['users'][user_nick]
-            # Deletes empty room
-            if len(self.rooms[self.clients[user_nick]['room']]['users']) == 0:
-                del self.rooms[self.clients[user_nick]['room']]
+            # Deletes his entry from room dictionary
+            del self.rooms[room_name]['users'][user_nick]
+            # Deletes empty room (the last user is leaving)
+            if len(self.rooms[room_name]['users']) == 0:
+                del self.rooms[room_name]
+                # Prints message to terminal
+                print("Room '%s' deleted by server because of emptiness" % room_name)
             else:
-                self.room_announce(self.get_online_users(self.clients[user_nick]['room']), self.clients[user_nick]['room'], "")
+                # Updates the list of online users to remaining users in room
+                self.room_announce(self.get_online_users(self.clients[user_nick]['room']), room_name, "")
+            # Nullify the room entry on clients dict
             self.clients[user_nick]['room'] = None
 
-            # Server console feedback
+            # Prints message to terminal
             print("'%s' is now outside of any room" % user_nick)
+        # User is already of a room
         else:
             user_socket.send(bytes("\\leave=no_room", "utf8"))
 
     def create_room(self, room_name, user_socket):
-        """Creates a new room"""
+        """
+        Creates a new room
+        :param room_name: Name of the room to be created
+        :param user_socket: Socket connected to user (who requested the creation)
+        """
+        # Checks if name is available
         if (room_name not in self.rooms.keys()) and (room_name is not None):
+            # Creates a empty entry in dict
             self.rooms[room_name] = {'users': {}}
+            # Replies with success
             user_socket.send(bytes("\\create=success", "utf8"))
 
-            # Server console feedback
+            # Prints message to terminal
             print("'%s' room has been created" % room_name)
+        # Name is in use
         else:
-            # Room already exists
             user_socket.send(bytes("\\create=failure", "utf8"))
 
     @staticmethod
     def broadcast(msg, recipients, prefix):
-        """Static method that sends a message to all socket in recipients list, prefix is for an identification tag"""
+        """
+        Static method that sends a message to all socket in recipients list
+        :param msg: Message to be sent
+        :param recipients: List of sockets of all clients that will receive the message
+        :param prefix: Prefix is for adding an identification tag
+        """
         if prefix != "":
             # Prefix is for name identification.
             for recipient in recipients:
                 recipient.send(bytes("[{prefix}]: {msg}".format(prefix=prefix, msg=msg), "utf8"))
         else:
+            # Send message without the prefix
             for recipient in recipients:
                 recipient.send(bytes(msg, "utf8"))
 
     def console(self):
+        """
+        Function to receive commmand from server terminal.
+        This is the target of a thread in the Server class constructor
+        """
         while True:
+            # Reads from terminal
             command = input()
+            # Checks for available commands (just 'quit' for now)
             if command == "quit":
+                # Prints message to terminal
+                print("User has request server stop")
                 self.stop_server()
+                # Stop the thread by ending the function
                 break
 
 
 if __name__ == "__main__":
-    # valid = False
-    # host, port, buffer_size, backlog = 0, 0, 0, 0
-    # while not valid:
-    #     try:
-    #         host = input("Host (127.0.0.1):")
-    #         port = int(input("Port (8080):"))
-    #         buffer_size = int(input("Buffer Size (1024):"))
-    #         backlog = int(input("Backlog (10):"))
-    #         valid = True
-    #     except ValueError:
-    #         print("Verifique os dados inseridos!")
+    valid = False
+    host, port, buffer_size, backlog = 0, 0, 0, 0
+    while not valid:
+        try:
+            host = input("Host (127.0.0.1):")
+            port = int(input("Port (8080):"))
+            buffer_size = int(input("Buffer Size (1024):"))
+            backlog = int(input("Backlog (10):"))
+            valid = True
+        except ValueError:
+            print("Verifique os dados inseridos!")
 
-    server = Server()
+    server = Server(host, port, buffer_size, backlog)
