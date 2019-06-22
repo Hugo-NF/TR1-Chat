@@ -66,6 +66,11 @@ class Server:
                 thread.join(1)
         self.client_threads.clear()
 
+        for client in self.clients.values():
+            client['socket'].close()
+        del self.clients
+        del self.rooms
+
         # Joining listening thread
         if self.listening_thread.isAlive():
             self.listening_thread.join(1)
