@@ -332,8 +332,8 @@ class Client:
             elif command == "create":
                 # Room successfully created
                 if answer == "success":
-                    QMessageBox.information(None, "Creating room",
-                                            "Room successfully created", QMessageBox.Ok)
+                    QMessageBox.warning(None, "Creating room",
+                                              "Room successfully created", QMessageBox.Ok)
                 # User tried to recreate a room
                 elif answer == "failure":
                     QMessageBox.critical(None, "Creating room",
