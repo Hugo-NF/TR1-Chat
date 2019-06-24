@@ -266,9 +266,9 @@ class Client:
                     self.conn_ui.nicknameEdit.setDisabled(False)
                     self.conn_ui.submitButton.setDisabled(False)
                     self.main_ui.roomsButton.hide()
-                    # Open box with message to user
-                    QMessageBox.critical(None, "Login",
-                                         "Nickname not valid", QMessageBox.Ok)
+
+                    # Write message to user at chat box
+                    self.main_ui.write_message("[Concord][Login]: Nickname not valid")
             # Reply to issued quit command
             elif command == "quit":
                 if answer == "success":
@@ -287,9 +287,8 @@ class Client:
             elif command == "online":
                 # User requested invalid room
                 if answer == "no_room":
-                    # Opens box with message to user
-                    QMessageBox.critical(None, "Online",
-                                         "You must specify a valid room", QMessageBox.Ok)
+                    # Write message to user at chat box
+                    self.main_ui.write_message("[Concord][Online list]: You must specify a valid room")
                 else:
                     # Clears the list
                     self.main_ui.online_clear()
@@ -300,8 +299,9 @@ class Client:
             # Reply to user unauthorized action (UI should not permit this, but manual commands still available)
             elif command == "server":
                 if answer == "no_room":
-                    QMessageBox.critical(None, "Sending",
-                                         "You must join a room first", QMessageBox.Ok)
+                    # Write message to user at chat box
+                    self.main_ui.write_message("[Concord][Join]: You must join a room a room first")
+
             # Reply to issued join command
             elif command == "join":
                 # User request invalid room (for example, user clicked join button with outdated rooms list)
@@ -312,9 +312,9 @@ class Client:
                     self.main_ui.sendButton.setDisabled(True)
                     self.main_ui.sendEdit.setDisabled(True)
                     self.main_ui.onlineFrame.setTitle("Online")
-                    # Opens box with message to user
-                    QMessageBox.critical(None, "Joining room",
-                                         "Room does not exists", QMessageBox.Ok)
+                    # Write message to user at chat box
+                    self.main_ui.write_message("[Concord][Join]: Room doesn't exists")
+
             # Reply to issued leave command
             elif command == "leave":
                 # User tried to leave without being in a room at first
@@ -325,19 +325,20 @@ class Client:
                     self.main_ui.sendButton.setDisabled(True)
                     self.main_ui.sendEdit.setDisabled(True)
                     self.main_ui.onlineFrame.setTitle("Online")
-                    # Opens box with message to user
-                    QMessageBox.critical(None, "Leaving room",
-                                         "You are not in a room", QMessageBox.Ok)
+                    # Write message to user at chat box
+                    self.main_ui.write_message("[Concord][Leave]: You're not in a room")
+
             # Reply to issued create command
             elif command == "create":
                 # Room successfully created
                 if answer == "success":
-                    QMessageBox.information(None, "Creating room",
-                                            "Room successfully created", QMessageBox.Ok)
+                    # Write message to user at chat box
+                    self.main_ui.write_message("[Concord][Create]: Room successfully created")
+
                 # User tried to recreate a room
                 elif answer == "failure":
-                    QMessageBox.critical(None, "Creating room",
-                                         "Room already exists", QMessageBox.Ok)
+                    # Write message to user at chat box
+                    self.main_ui.write_message("[Concord][Create]: Room already exists")
 
         # Message didn't matched with regexp, just print it on screen
         else:
