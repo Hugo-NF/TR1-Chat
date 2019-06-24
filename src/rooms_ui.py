@@ -2,16 +2,17 @@
 
 # Form implementation generated from reading ui file 'rooms.ui'
 #
-# Created by: PyQt5 UI code generator 5.10.1
+# Created by: PyQt5 UI code generator 5.12.1
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+
 class Ui_roomsDialog(object):
     def setupUi(self, roomsDialog):
         roomsDialog.setObjectName("roomsDialog")
-        roomsDialog.resize(626, 364)
+        roomsDialog.resize(453, 364)
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout(roomsDialog)
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.middleSplitter = QtWidgets.QSplitter(roomsDialog)
@@ -21,21 +22,21 @@ class Ui_roomsDialog(object):
         self.roomsFrame.setObjectName("roomsFrame")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.roomsFrame)
         self.verticalLayout.setObjectName("verticalLayout")
-        self.roomsTable = QtWidgets.QTableWidget(self.roomsFrame)
-        self.roomsTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.roomsTable.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
-        self.roomsTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.roomsTable.setShowGrid(True)
-        self.roomsTable.setGridStyle(QtCore.Qt.NoPen)
-        self.roomsTable.setWordWrap(False)
-        self.roomsTable.setObjectName("roomsTable")
-        self.roomsTable.setColumnCount(2)
-        self.roomsTable.setRowCount(0)
-        item = QtWidgets.QTableWidgetItem()
-        self.roomsTable.setHorizontalHeaderItem(0, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.roomsTable.setHorizontalHeaderItem(1, item)
-        self.verticalLayout.addWidget(self.roomsTable)
+        self.refreshButton = QtWidgets.QToolButton(self.roomsFrame)
+        self.refreshButton.setObjectName("refreshButton")
+        self.verticalLayout.addWidget(self.refreshButton)
+        self.roomsList = QtWidgets.QListWidget(self.roomsFrame)
+        self.roomsList.setObjectName("roomsList")
+        self.verticalLayout.addWidget(self.roomsList)
+        self.buttonsRoomLayout = QtWidgets.QHBoxLayout()
+        self.buttonsRoomLayout.setObjectName("buttonsRoomLayout")
+        self.leaveButton = QtWidgets.QPushButton(self.roomsFrame)
+        self.leaveButton.setObjectName("leaveButton")
+        self.buttonsRoomLayout.addWidget(self.leaveButton)
+        self.joinButton = QtWidgets.QPushButton(self.roomsFrame)
+        self.joinButton.setObjectName("joinButton")
+        self.buttonsRoomLayout.addWidget(self.joinButton)
+        self.verticalLayout.addLayout(self.buttonsRoomLayout)
         self.roomCreateFrame = QtWidgets.QGroupBox(self.roomsFrame)
         self.roomCreateFrame.setObjectName("roomCreateFrame")
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.roomCreateFrame)
@@ -45,43 +46,14 @@ class Ui_roomsDialog(object):
         self.roomNameLabel = QtWidgets.QLabel(self.roomCreateFrame)
         self.roomNameLabel.setObjectName("roomNameLabel")
         self.roomCreateLayout.addWidget(self.roomNameLabel)
-        self.lineEdit = QtWidgets.QLineEdit(self.roomCreateFrame)
-        self.lineEdit.setObjectName("lineEdit")
-        self.roomCreateLayout.addWidget(self.lineEdit)
+        self.roomNameEdit = QtWidgets.QLineEdit(self.roomCreateFrame)
+        self.roomNameEdit.setObjectName("roomNameEdit")
+        self.roomCreateLayout.addWidget(self.roomNameEdit)
         self.createButton = QtWidgets.QPushButton(self.roomCreateFrame)
         self.createButton.setObjectName("createButton")
         self.roomCreateLayout.addWidget(self.createButton)
         self.verticalLayout_4.addLayout(self.roomCreateLayout)
         self.verticalLayout.addWidget(self.roomCreateFrame)
-        self.onlineFrame = QtWidgets.QGroupBox(self.middleSplitter)
-        self.onlineFrame.setObjectName("onlineFrame")
-        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.onlineFrame)
-        self.verticalLayout_2.setObjectName("verticalLayout_2")
-        self.onlineTable = QtWidgets.QTableWidget(self.onlineFrame)
-        self.onlineTable.setEnabled(True)
-        self.onlineTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.onlineTable.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
-        self.onlineTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.onlineTable.setShowGrid(True)
-        self.onlineTable.setGridStyle(QtCore.Qt.NoPen)
-        self.onlineTable.setWordWrap(False)
-        self.onlineTable.setRowCount(0)
-        self.onlineTable.setObjectName("onlineTable")
-        self.onlineTable.setColumnCount(2)
-        item = QtWidgets.QTableWidgetItem()
-        self.onlineTable.setHorizontalHeaderItem(0, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.onlineTable.setHorizontalHeaderItem(1, item)
-        self.verticalLayout_2.addWidget(self.onlineTable)
-        self.buttonsRoomLayout = QtWidgets.QHBoxLayout()
-        self.buttonsRoomLayout.setObjectName("buttonsRoomLayout")
-        self.leaveButton = QtWidgets.QPushButton(self.onlineFrame)
-        self.leaveButton.setObjectName("leaveButton")
-        self.buttonsRoomLayout.addWidget(self.leaveButton)
-        self.joinButton = QtWidgets.QPushButton(self.onlineFrame)
-        self.joinButton.setObjectName("joinButton")
-        self.buttonsRoomLayout.addWidget(self.joinButton)
-        self.verticalLayout_2.addLayout(self.buttonsRoomLayout)
         self.horizontalLayout_3.addWidget(self.middleSplitter)
 
         self.retranslateUi(roomsDialog)
@@ -91,37 +63,15 @@ class Ui_roomsDialog(object):
         _translate = QtCore.QCoreApplication.translate
         roomsDialog.setWindowTitle(_translate("roomsDialog", "Rooms"))
         self.roomsFrame.setTitle(_translate("roomsDialog", "Available Rooms"))
-        self.roomsTable.setSortingEnabled(True)
-        item = self.roomsTable.horizontalHeaderItem(0)
-        item.setText(_translate("roomsDialog", "Name"))
-        item = self.roomsTable.horizontalHeaderItem(1)
-        item.setText(_translate("roomsDialog", "Online"))
+        self.refreshButton.setText(_translate("roomsDialog", "Refresh"))
+        self.leaveButton.setText(_translate("roomsDialog", "Leave"))
+        self.joinButton.setText(_translate("roomsDialog", "Join"))
         self.roomCreateFrame.setTitle(_translate("roomsDialog", "Create a room"))
         self.roomNameLabel.setText(_translate("roomsDialog", "Name:"))
         self.createButton.setText(_translate("roomsDialog", "Create"))
-        self.onlineFrame.setTitle(_translate("roomsDialog", "Online"))
-        self.onlineTable.setSortingEnabled(True)
-        item = self.onlineTable.horizontalHeaderItem(0)
-        item.setText(_translate("roomsDialog", "Name"))
-        item = self.onlineTable.horizontalHeaderItem(1)
-        item.setText(_translate("roomsDialog", "Last seen"))
-        self.leaveButton.setText(_translate("roomsDialog", "Leave"))
-        self.joinButton.setText(_translate("roomsDialog", "Join"))
 
-    def add_room(self, name, online_no):
-        rowPos = self.roomsTable.rowCount()
-        self.roomsTable.insertRow(rowPos)
-        self.roomsTable.setItem(rowPos, 0, QtWidgets.QTableWidgetItem(name))
-        self.roomsTable.setItem(rowPos, 1, QtWidgets.QTableWidgetItem(online_no))
+    def add_room(self, room):
+        self.roomsList.addItem(room)
 
-    def add_user(self, name, last_seen):
-        rowPos = self.roomsTable.rowCount()
-        self.onlineTable.insertRow(rowPos)
-        self.onlineTable.setItem(rowPos, 0, QtWidgets.QTableWidgetItem(name))
-        self.onlineTable.setItem(rowPos, 1, QtWidgets.QTableWidgetItem(last_seen))
-
-    def remove_room(self, row):
-        self.roomsTable.removeRow(row)
-
-    def remove_user(self, row):
-        self.roomsTable.removeRow(row)
+    def clear_rooms(self):
+        self.roomsList.clear()

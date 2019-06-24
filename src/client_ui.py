@@ -1,78 +1,75 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'mainwindow.ui'
+# Form implementation generated from reading ui file 'client.ui'
 #
-# Created by: PyQt5 UI code generator 5.10.1
+# Created by: PyQt5 UI code generator 5.12.1
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QMainWindow, QMessageBox
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.setWindowModality(QtCore.Qt.ApplicationModal)
-        MainWindow.resize(867, 598)
+        MainWindow.resize(917, 437)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(MainWindow.sizePolicy().hasHeightForWidth())
+        MainWindow.setSizePolicy(sizePolicy)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
-        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.centralwidget)
-        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.optionsLayout = QtWidgets.QVBoxLayout()
+        self.optionsLayout.setObjectName("optionsLayout")
         self.connectionButton = QtWidgets.QCommandLinkButton(self.centralwidget)
         self.connectionButton.setObjectName("connectionButton")
-        self.verticalLayout_2.addWidget(self.connectionButton)
+        self.optionsLayout.addWidget(self.connectionButton)
         self.roomsButton = QtWidgets.QCommandLinkButton(self.centralwidget)
         self.roomsButton.setObjectName("roomsButton")
-        self.verticalLayout_2.addWidget(self.roomsButton)
+        self.optionsLayout.addWidget(self.roomsButton)
+        self.verticalLayout.addLayout(self.optionsLayout)
         self.splitter = QtWidgets.QSplitter(self.centralwidget)
-        self.splitter.setOrientation(QtCore.Qt.Vertical)
+        self.splitter.setOrientation(QtCore.Qt.Horizontal)
+        self.splitter.setHandleWidth(4)
         self.splitter.setObjectName("splitter")
         self.chatFrame = QtWidgets.QGroupBox(self.splitter)
         self.chatFrame.setObjectName("chatFrame")
-        self.horizontalLayout = QtWidgets.QHBoxLayout(self.chatFrame)
-        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.chatFrame)
+        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.textViewer = QtWidgets.QTextBrowser(self.chatFrame)
         self.textViewer.setObjectName("textViewer")
-        self.horizontalLayout.addWidget(self.textViewer)
-        self.layoutWidget = QtWidgets.QWidget(self.splitter)
-        self.layoutWidget.setObjectName("layoutWidget")
-        self.messageBoxLayout = QtWidgets.QHBoxLayout(self.layoutWidget)
-        self.messageBoxLayout.setContentsMargins(0, 0, 0, 0)
-        self.messageBoxLayout.setObjectName("messageBoxLayout")
-        self.messageEdit = QtWidgets.QTextEdit(self.layoutWidget)
-        self.messageEdit.setObjectName("messageEdit")
-        self.messageBoxLayout.addWidget(self.messageEdit)
-        self.sendButtonLayout = QtWidgets.QVBoxLayout()
-        self.sendButtonLayout.setObjectName("sendButtonLayout")
-        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.sendButtonLayout.addItem(spacerItem)
-        self.sendButton = QtWidgets.QPushButton(self.layoutWidget)
+        self.horizontalLayout_2.addWidget(self.textViewer)
+        self.onlineFrame = QtWidgets.QGroupBox(self.splitter)
+        self.onlineFrame.setObjectName("onlineFrame")
+        self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.onlineFrame)
+        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
+        self.onlineList = QtWidgets.QListWidget(self.onlineFrame)
+        self.onlineList.setObjectName("onlineList")
+        self.horizontalLayout_3.addWidget(self.onlineList)
+        self.refreshButton = QtWidgets.QPushButton(self.onlineFrame)
+        self.refreshButton.setObjectName("refreshButton")
+        self.horizontalLayout_3.addWidget(self.refreshButton)
+        self.verticalLayout.addWidget(self.splitter)
+        self.sendFrame = QtWidgets.QGroupBox(self.centralwidget)
+        self.sendFrame.setObjectName("sendFrame")
+        self.horizontalLayout = QtWidgets.QHBoxLayout(self.sendFrame)
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.sendEdit = QtWidgets.QLineEdit(self.sendFrame)
+        self.sendEdit.setObjectName("sendEdit")
+        self.horizontalLayout.addWidget(self.sendEdit)
+        self.sendButton = QtWidgets.QPushButton(self.sendFrame)
         self.sendButton.setObjectName("sendButton")
-        self.sendButtonLayout.addWidget(self.sendButton)
-        self.messageBoxLayout.addLayout(self.sendButtonLayout)
-        self.verticalLayout_2.addWidget(self.splitter)
+        self.horizontalLayout.addWidget(self.sendButton)
+        self.verticalLayout.addWidget(self.sendFrame)
         MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 867, 22))
-        self.menubar.setObjectName("menubar")
-        self.menuOptions = QtWidgets.QMenu(self.menubar)
-        self.menuOptions.setObjectName("menuOptions")
-        MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
-        self.actionQuit = QtWidgets.QAction(MainWindow)
-        self.actionQuit.setObjectName("actionQuit")
-        self.actionEnglish = QtWidgets.QAction(MainWindow)
-        self.actionEnglish.setObjectName("actionEnglish")
-        self.actionPortuguese = QtWidgets.QAction(MainWindow)
-        self.actionPortuguese.setObjectName("actionPortuguese")
-        self.actionAbout = QtWidgets.QAction(MainWindow)
-        self.actionAbout.setObjectName("actionAbout")
-        self.actionAbout_Qt = QtWidgets.QAction(MainWindow)
-        self.actionAbout_Qt.setObjectName("actionAbout_Qt")
-        self.menuOptions.addAction(self.actionAbout_Qt)
-        self.menuOptions.addAction(self.actionQuit)
-        self.menubar.addAction(self.menuOptions.menuAction())
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -83,19 +80,37 @@ class Ui_MainWindow(object):
         self.connectionButton.setText(_translate("MainWindow", "Connection"))
         self.roomsButton.setText(_translate("MainWindow", "Rooms"))
         self.chatFrame.setTitle(_translate("MainWindow", "Chat"))
+        self.onlineFrame.setTitle(_translate("MainWindow", "Online"))
+        self.refreshButton.setText(_translate("MainWindow", "Refresh"))
+        self.sendFrame.setTitle(_translate("MainWindow", "Send"))
         self.sendButton.setText(_translate("MainWindow", "Send"))
-        self.menuOptions.setTitle(_translate("MainWindow", "Options"))
-        self.actionQuit.setText(_translate("MainWindow", "Quit"))
-        self.actionEnglish.setText(_translate("MainWindow", "English"))
-        self.actionPortuguese.setText(_translate("MainWindow", "Portuguese"))
-        self.actionAbout.setText(_translate("MainWindow", "About"))
-        self.actionAbout_Qt.setText(_translate("MainWindow", "About Qt"))
 
-    def write_message(self, username, msg_text):
-        self.textViewer.insertPlainText("\n[{username}]: {msg_text}".format(username=username, msg_text=msg_text))
+    def write_message(self, msg_text):
+        """Adds a new message to chat box"""
+        # Add a new message to message box UI
+        self.textViewer.append(msg_text)
+        # Scroll to the end
+        self.textViewer.moveCursor(QtGui.QTextCursor.End)
 
     def clear_message_box(self):
-        self.messageEdit.clear()
+        self.sendEdit.clear()
 
     def read_message_box(self):
-        return self.messageEdit.toPlainText()
+        return self.sendEdit.text()
+
+    def online_add(self, user):
+        self.onlineList.addItem(user)
+
+    def online_clear(self):
+        self.onlineList.clear()
+
+
+class ClientWindow(QMainWindow):
+    def closeEvent(self, event):
+        quit_msg = "Are you sure you want to exit the program?\n"\
+                   "Warning: Remember to disconnect before quitting"
+        reply = QMessageBox.question(self, 'Quit', quit_msg, QMessageBox.Yes, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            event.accept()
+        else:
+            event.ignore()

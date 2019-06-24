@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>553</width>
-    <height>112</height>
+    <width>410</width>
+    <height>111</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,7 +15,7 @@
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
-    <layout class="QHBoxLayout" name="hostLayout">
+    <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QLabel" name="hostLabel">
        <property name="text">
@@ -26,7 +26,7 @@
      <item>
       <widget class="QLineEdit" name="hostEdit">
        <property name="text">
-        <string/>
+        <string>127.0.0.1</string>
        </property>
        <property name="placeholderText">
         <string>127.0.0.1</string>
@@ -35,36 +35,22 @@
      </item>
     </layout>
    </item>
-   <item row="2" column="0" colspan="2">
-    <layout class="QHBoxLayout" name="horizontalLayout">
+   <item row="1" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="QLabel" name="displayNameLabel">
+      <widget class="QLabel" name="portLabel">
        <property name="text">
-        <string>Display Name:</string>
+        <string>Port:</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="displayNameEdit"/>
-     </item>
-    </layout>
-   </item>
-   <item row="0" column="1" rowspan="2">
-    <layout class="QVBoxLayout" name="serverLayout">
-     <item>
-      <widget class="QRadioButton" name="tcpRadioButton">
+      <widget class="QLineEdit" name="portEdit">
        <property name="text">
-        <string>TCP</string>
+        <string>8080</string>
        </property>
-       <property name="checked">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QRadioButton" name="udpRadioButton">
-       <property name="text">
-        <string>UDP</string>
+       <property name="placeholderText">
+        <string>8080</string>
        </property>
       </widget>
      </item>
@@ -77,36 +63,71 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="0">
-    <layout class="QHBoxLayout" name="portLayout">
+   <item row="2" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
-      <widget class="QLabel" name="portLabel">
+      <widget class="QLabel" name="nicknameLabel">
        <property name="text">
-        <string>Port:</string>
+        <string>Nickname:</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="portEdit">
-       <property name="placeholderText">
-        <string>8080</string>
+      <widget class="QLineEdit" name="nicknameEdit">
+       <property name="enabled">
+        <bool>false</bool>
        </property>
       </widget>
      </item>
     </layout>
    </item>
-   <item row="1" column="3">
+   <item row="0" column="2">
     <widget class="QProgressBar" name="connectionProgress">
-     <property name="value">
+     <property name="minimum">
       <number>0</number>
+     </property>
+     <property name="maximum">
+      <number>0</number>
+     </property>
+     <property name="value">
+      <number>-1</number>
      </property>
      <property name="format">
       <string/>
      </property>
     </widget>
    </item>
+   <item row="1" column="1">
+    <spacer name="horizontalSpacer">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>40</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="2" column="2">
+    <widget class="QPushButton" name="submitButton">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string>Submit</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>hostEdit</tabstop>
+  <tabstop>portEdit</tabstop>
+  <tabstop>nicknameEdit</tabstop>
+  <tabstop>connectButton</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
