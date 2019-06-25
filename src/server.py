@@ -16,8 +16,14 @@ class Server:
         :param backlog: Determines the amount of clients that may wait for the server
         """
         # Data management
+        # Dict of clients connected to the server
         self.clients = {}
+
+        # Dict of clients organized by room
         self.rooms = {}
+
+        # List of other servers known as online
+        self.servers = []
 
         # Setting socket properties
         self.host = host
@@ -27,7 +33,10 @@ class Server:
         self.own_address = (self.host, self.port)
 
         # Regexp to easily switch between commands
-        self.commands_re = re.compile("^\\\(quit|leave|join|rooms|online|create)(?:\s*{(.*)})?$", re.MULTILINE)
+        self.commands_re = re.compile("^\\\(quit|leave|join|rooms|online|create|handshake|acknowledgement)(?:\s*{(.*)})?$", re.MULTILINE)
+
+        # Regexp with commands between servers
+        self.servers_re = re.compile("^\\\(handshake|acknowledgement)(?:\s*{(.*)})?$", re.MULTILINE)
 
         # Prints a welcome message to console
         print("\nWelcome to Concord Server v.0.9.2\n"
@@ -35,18 +44,24 @@ class Server:
 
         # Create TCP socket with user selected properties.
         self.socket = socket(AF_INET, SOCK_STREAM)
+        # Create UDP socket to sync servers
+        self.server_socket = socket(AF_INET, SOCK_DGRAM)
 
         try:
-            # Bind the socket to address.
+            # Bind the server sockets.
             # The socket must not already be bound, it may raise the treated OSError exception
             self.socket.bind(self.own_address)
+            self.server_socket.bind(self.own_address)
+
             # Enable a server to accept connections.
             self.socket.listen(self.backlog)
 
-            # Prints console feedback message and reconfigure the buttons
-            print("Server is up and running! Waiting for connections...")
-
             # Set up threads
+            # This thread will keep multiple servers synchronized
+            self.sync_thread = Thread(target=self.servers_sync)
+            self.sync_thread.start()
+
+            # This thread will listen for client connections
             self.listening_thread = Thread(target=self.listen)
             self.client_threads = []
             # From now on, we're allowed to receive connections
@@ -56,10 +71,15 @@ class Server:
             self.console_thread = Thread(target=self.console)
             self.console_thread.start()
 
+            # Prints console feedback message and reconfigure the buttons
+            print("Server is up and running! Waiting for connections...")
+
         except OSError:
             # Treating exception thrown by bind
             print(traceback.format_exc())
             print("Check your configuration and try again")
+            self.server_socket.close()
+            self.socket.close()
 
     def stop_server(self):
         """
@@ -82,11 +102,38 @@ class Server:
         if self.listening_thread.isAlive():
             self.listening_thread.join(1)
 
-        # Close socket
+        # Close sockets
         self.socket.close()
+        self.server_socket.close()
 
         # Prints message to terminal
         print("Server successfully shutdown")
+
+    def find_server(self, host, port):
+        """
+        Broadcast a handshake command through an UDP socket to all possible ports to servers
+        """
+        # Prints message to terminal
+        print("Trying to connect to other server at %s:%s" % (host, port))
+        self.server_socket.sendto(bytes("\\handshake", "utf8"), (host, port))
+
+    def servers_sync(self):
+        """
+        Thread target for synchronize servers using UDP socket
+        """
+        while True:
+            message, address = self.server_socket.recvfrom(self.buffer_size)
+            self.update_server(message, address)
+
+    def update_server(self, message, address):
+        match = self.servers_re.match(message)
+        if match:
+            command, argument = match.groups()
+            # Prints message to terminal
+            print("Synchronizing with server at %s:%s" % (address[0], address[1]))
+            if command == "handshake":
+                # Adds the
+                self.servers.append(address)
 
     def listen(self):
         """
@@ -356,6 +403,13 @@ class Server:
                 self.stop_server()
                 # Stop the thread by ending the function
                 break
+            elif command == "add_server":
+                try:
+                    server_host = input("Host:")
+                    server_port = int(input("Port:"))
+                    self.find_server(server_host, server_port)
+                except ValueError:
+                    print("Verifique os dados inseridos!")
 
 
 if __name__ == "__main__":
