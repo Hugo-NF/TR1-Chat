@@ -176,9 +176,17 @@ class Client:
                 break
             # TODO check: Colocar a exceção de conexão quebrada, apagar o servidor que você estava conectado da lista e enviar um \reconnect{'nick'} para outro servidor online
             except ConnectionResetError:
-                self.socket.sendto(bytes("\\reconnect{address}".format(address=(self.conn_host, self.conn_port)), "utf8"),
-                                          (self.servers[0].host, self.servers[0].port))
-                self.reconnect(self.servers[0].host, self.servers[0].port)
+                # Reconnection
+                while True:
+                    try:
+                        self.servers.remove(self.conn_address)
+                        self.conn_host = self.servers[0].host
+                        self.conn_port = self.servers[0].port
+                        self.conn_address = (self.conn_host, int(self.conn_port))
+                        self.reconnect(self.servers[0].host, self.servers[0].port)
+                        break
+                    except OSError:
+                        QMessageBox.critical(None, 'Error', "Could not find a server at {}:{}" .format(self.conn_host, self.conn_port), QMessageBox.Ok)
 
 
     def send_action(self):

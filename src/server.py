@@ -158,19 +158,20 @@ class Server:
                 self.server_socket.sendto(bytes("\\ack{clients}".format(clients=re.sub(r",\s*\'socket\':\s*<(.*)>", "",
                                                                         str(self.clients))), "utf8"), eval(argument))
                 # TODO Enviar a lista de servidores online para todos os seus clientes, usando o comando \servers
+            elif command == "servers":
+                share()
             elif command == "ack":
                 # TODO: Criar o dicionario de clientes com o primeiro ack recebido (eval(argument)), reconstruir as salas a partir da informação dos clientes [campo room]
                 # TODO: Para os acks posteriores, salvar apenas o endereço do remetente na lista de servidores online
                 print()
-            elif command == "no_answer":
+            #elif command == "no_answer":
 
-                # TODO: Um servidor detectou a queda de outro (recebeu um cliente dele por meio de um reconnect)
-            elif command == "reconnect":
-                self.servers.remove(argument)
+                # TODO check: Um servidor detectou a queda de outro (recebeu um cliente dele por meio de um reconnect)
+            #elif command == "reconnect":
 
-                # TODO: Remova o endereço dele da lista (argument), a partir de agora, caso você receba um reconnect
+                # TODO check: Remova o endereço dele da lista (argument), a partir de agora, caso você receba um reconnect
 
-                # TODO: e o servidor do cliente não está lista de online, o no_answer não deve ser deflagrado
+                # TODO check: e o servidor do cliente não está lista de online, o no_answer não deve ser deflagrado
                 print()
 
         # TODO: receber os comandos de usuario, de tal forma que seja possivel chamar as mesmas funções, como se fosse um cliente conectado (pode ser feito num regex match separado)
@@ -184,6 +185,15 @@ class Server:
         while True:
             # Blocking socket call waiting for client connection
             client, client_address = self.socket.accept()
+
+            # Checks if user is from another server (Reconnection)
+            if client in self.clients:
+                og_server = self.clients[client][2]
+                if og_server in self.servers:
+                    # Removes downed server from servers list
+                    self.servers.remove(self.clients[client][2])
+                # New client server's address recieves this server's address
+                self.clients[client][2] = (self.host, int(self.port))
 
             # Prints message to terminal
             print("Connection established with {host}:{port}"
