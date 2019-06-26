@@ -19,7 +19,7 @@ class Server:
         # Dict of clients connected to the server
         self.clients = {}
 
-        # List of servers online
+        # Dict of servers online
         self.servers = []
 
         # Dict of clients organized by room
@@ -163,8 +163,13 @@ class Server:
                 # TODO: Para os acks posteriores, salvar apenas o endereço do remetente na lista de servidores online
                 print()
             elif command == "no_answer":
+
                 # TODO: Um servidor detectou a queda de outro (recebeu um cliente dele por meio de um reconnect)
+            elif command == "reconnect":
+                self.servers.remove(argument)
+
                 # TODO: Remova o endereço dele da lista (argument), a partir de agora, caso você receba um reconnect
+
                 # TODO: e o servidor do cliente não está lista de online, o no_answer não deve ser deflagrado
                 print()
 
@@ -460,7 +465,6 @@ class Server:
                 self.stop_server()
                 # Stop the thread by ending the function
                 break
-
 
 if __name__ == "__main__":
     valid = False

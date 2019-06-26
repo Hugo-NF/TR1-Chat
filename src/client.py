@@ -149,6 +149,20 @@ class Client:
         QMessageBox.information(None, 'Disconnected',
                                 "Disconnected successfully", QMessageBox.Ok)
 
+    def reconnect(self, host, port):
+        # Socket properties
+        self.conn_host = host
+        self.conn_port = port
+
+        self.conn_address = (self.conn_host, int(self.conn_port))
+        # Creates a socket and tries to connect
+        self.socket = socket(AF_INET, SOCK_STREAM)
+        self.socket.connect(self.conn_address)
+
+        # Starting a new thread to listen the connection
+        self.listening_thread = Thread(target=self.listen)
+        self.listening_thread.start()
+
     def listen(self):
         """Listens for server messages"""
         proceed = True
@@ -160,7 +174,12 @@ class Client:
                 proceed = self.treat_message(message)
             except OSError:  # Client has left
                 break
-            # TODO: Colocar a exceção de conexão quebrada, apagar o servidor que você estava conectado da lista e enviar um \reconnect{'nick'} para outro servidor online
+            # TODO check: Colocar a exceção de conexão quebrada, apagar o servidor que você estava conectado da lista e enviar um \reconnect{'nick'} para outro servidor online
+            except ConnectionResetError:
+                self.socket.sendto(bytes("\\reconnect{address}".format(address=(self.conn_host, self.conn_port)), "utf8"),
+                                          (self.servers[0].host, self.servers[0].port))
+                self.reconnect(self.servers[0].host, self.servers[0].port)
+
 
     def send_action(self):
         """
@@ -191,6 +210,7 @@ class Client:
         """
         # User has typed something at text box
         if nick != "":
+            self.nick = nick
             # Send nick to server
             self.socket.send(bytes("\\insert{%s}" % nick, "utf8"))
             # Reconfigure UI to 'User has a nick' state
