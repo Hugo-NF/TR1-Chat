@@ -27,8 +27,11 @@ class Client:
         self.rooms_ui = rooms_ui
         self.conn_ui = conn_ui
 
+        # Online servers list
+        self.servers = []
+
         # Regexp to handle server answer
-        self.answers_regexp = re.compile("^\\\(insert|quit|rooms|online|server|join|leave|create)=(.*)$")
+        self.answers_regexp = re.compile("^\\\(insert|quit|rooms|online|server|join|leave|create|servers)=(.*)$")
 
         # UI initial state
         # Bind send button to send message
@@ -157,6 +160,7 @@ class Client:
                 proceed = self.treat_message(message)
             except OSError:  # Client has left
                 break
+            # TODO: Colocar a exceção de conexão quebrada, apagar o servidor que você estava conectado da lista e enviar um \reconnect{'nick'} para outro servidor online
 
     def send_action(self):
         """
@@ -193,6 +197,7 @@ class Client:
             self.conn_ui.nicknameEdit.setDisabled(True)
             self.conn_ui.submitButton.setDisabled(True)
             self.main_ui.roomsButton.show()
+            # TODO Enviar um comando \servers para receber uma lista dos servidores online
 
     def get_rooms(self):
         """

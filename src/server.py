@@ -19,11 +19,11 @@ class Server:
         # Dict of clients connected to the server
         self.clients = {}
 
+        # List of servers online
+        self.servers = []
+
         # Dict of clients organized by room
         self.rooms = {}
-
-        # List of other servers known as online
-        self.servers = []
 
         # Setting socket properties
         self.host = host
@@ -33,10 +33,10 @@ class Server:
         self.own_address = (self.host, self.port)
 
         # Regexp to easily switch between commands
-        self.commands_re = re.compile("^\\\(quit|leave|join|rooms|online|create|handshake|acknowledgement)(?:\s*{(.*)})?$", re.MULTILINE)
+        self.commands_re = re.compile("^\\\(quit|leave|join|rooms|online|create|servers)(?:\s*{(.*)})?$", re.MULTILINE)
 
         # Regexp with commands between servers
-        self.servers_re = re.compile("^\\\(handshake|acknowledgement)(?:\s*{(.*)})?$", re.MULTILINE)
+        self.servers_re = re.compile("^\\\(handshake|ack|no_answer)(?:\s*{(.*)})?$", re.MULTILINE)
 
         # Prints a welcome message to console
         print("\nWelcome to Concord Server v.0.9.2\n"
@@ -60,6 +60,17 @@ class Server:
             # This thread will keep multiple servers synchronized
             self.sync_thread = Thread(target=self.servers_sync)
             self.sync_thread.start()
+
+            # Trying to find other servers
+            if input("Arranjo Multi-server? [S/N]") == "S":
+                while True:
+                    try:
+                        server_host = input("Host:")
+                        server_port = int(input("Port:"))
+                        self.find_server(server_host, server_port)
+                        break
+                    except ValueError:
+                        print("Verifique os dados inseridos!")
 
             # This thread will listen for client connections
             self.listening_thread = Thread(target=self.listen)
@@ -102,6 +113,10 @@ class Server:
         if self.listening_thread.isAlive():
             self.listening_thread.join(1)
 
+        # Joining sync thread
+        if self.sync_thread.isAlive():
+            self.sync_thread.join(1)
+
         # Close sockets
         self.socket.close()
         self.server_socket.close()
@@ -115,7 +130,7 @@ class Server:
         """
         # Prints message to terminal
         print("Trying to connect to other server at %s:%s" % (host, port))
-        self.server_socket.sendto(bytes("\\handshake", "utf8"), (host, port))
+        self.server_socket.sendto(bytes("\\handshake{address}".format(address=(self.host, self.port)), "utf8"), (host, port))
 
     def servers_sync(self):
         """
@@ -132,8 +147,27 @@ class Server:
             # Prints message to terminal
             print("Synchronizing with server at %s:%s" % (address[0], address[1]))
             if command == "handshake":
-                # Adds the
+                # Broadcast handshake to other online
+                for server_addr in self.servers:
+                    self.server_socket.sendto(bytes("\\handshake{address}".format(address=address), "utf8"),
+                                              server_addr)
+
+                # Adds the server to the known list
                 self.servers.append(address)
+                # Send back an acknowledgment passing all current connected clients
+                self.server_socket.sendto(bytes("\\ack{clients}".format(clients=re.sub(r",\s*\'socket\':\s*<(.*)>", "",
+                                                                        str(self.clients))), "utf8"), eval(argument))
+            elif command == "ack":
+                # TODO: Criar o dicionario de clientes com o primeiro ack recebido (eval(argument)), reconstruir as salas a partir da informação dos clientes [campo room]
+                # TODO: Para os acks posteriores, salvar apenas o endereço do remetente na lista de servidores online
+                print()
+            elif command == "no_answer":
+                # TODO: Um servidor detectou a queda de outro (recebeu um cliente dele por meio de um reconnect)
+                # TODO: Remova o endereço dele da lista (argument), a partir de agora, caso você receba um reconnect
+                # TODO: e o servidor do cliente não está lista de online, o no_answer não deve ser deflagrado
+                print()
+
+        # TODO: receber os comandos de usuario, de tal forma que seja possivel chamar as mesmas funções, como se fosse um cliente conectado (pode ser feito num regex match separado)
 
     def listen(self):
         """
@@ -175,7 +209,7 @@ class Server:
         # Initial conditions
         proceed = True
         nick = ""
-        insert_regexp = re.compile("^\\\(quit|insert)\s*(?:{(.*)})?$", re.MULTILINE)
+        insert_regexp = re.compile("^\\\(quit|insert|reconnect)\s*(?:{(.*)})?$", re.MULTILINE)
 
         try:
             # Loop to get user's nickname
@@ -199,8 +233,11 @@ class Server:
                             socket.send(bytes("\\insert=not_valid_nickname", "utf8"))
                         # Adds client to list
                         else:
-                            self.clients[nick] = {'address': address, 'socket': socket, 'room': None}
+                            self.clients[nick] = {'address': address, 'socket': socket, 'room': None, 'server': self.own_address}
                             proceed = False
+                    elif command == "reconnect":
+                        # TODO Uma conexão foi aceita de um cliente de outro servidor. Olhar o servidor na lista e assumir ele como offline. Propagar a queda dele para os outros servidores online
+                        print()
                 else:
                     socket.send(bytes("\\insert=not_valid_nickname", "utf8"))
 
@@ -226,7 +263,9 @@ class Server:
                         socket.close()
                         # Prints message to terminal
                         print("%s (address %s:%s) has quit" % (nick, address[0], address[1]))
+                        # TODO Informar os outros servidores
                         return
+
 
                     # Rooms: join all keys from rooms hash and send back to user
                     elif command == 'rooms':
@@ -242,15 +281,20 @@ class Server:
                     # send confirmation and broadcast message to room
                     elif command == 'join':
                         self.join_room(nick, argument, socket)
+                        # TODO Informar os outros servidores
 
                     # Leave: remove his entry from room, clear 'room' value on user hash entry,
                     # send confirmation and broadcast message to room
                     elif command == 'leave':
                         self.leave_room(nick, socket)
+                        # TODO Informar os outros servidores
 
                     # Create: create new entry on rooms hash
                     elif command == 'create':
                         self.create_room(argument, socket)
+                        # TODO Informar os outros servidores
+
+                    # TODO: adicionar o comando servers que devolve a sua lista de servidores conhecidos
 
                 # The message was a normal text, broadcast it to room users
                 else:
@@ -282,6 +326,18 @@ class Server:
         :param room: Destination room
         :param prefix: Prefix for message tag sender identification
         """
+        recipients = []
+        forwards = {(h:p):[]}
+
+        users_room = self.rooms[room]
+        for user in users_room:
+            if self.clients[user]['server'] == self.own_address:
+                recipients.append(self.clients['socket'])
+            else:
+                forwards[self.clients[user]['server']].append("MENSAGEM FORMATADA DA FORMA QUE QUISER")
+                print()
+        # TODO: Broadcast TCP para os recipients (exemplo abaixo)
+        # TODO: Broadcast UDP para os forwards (enviar para os servidores)
         # The following condition assumes that rooms_hash will be accessed within function call
         if room is not None:
             Server.broadcast(msg, [client['socket'] for client in self.rooms[room]['users'].values()], prefix)
@@ -403,13 +459,6 @@ class Server:
                 self.stop_server()
                 # Stop the thread by ending the function
                 break
-            elif command == "add_server":
-                try:
-                    server_host = input("Host:")
-                    server_port = int(input("Port:"))
-                    self.find_server(server_host, server_port)
-                except ValueError:
-                    print("Verifique os dados inseridos!")
 
 
 if __name__ == "__main__":
