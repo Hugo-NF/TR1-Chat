@@ -345,6 +345,9 @@ class Client:
                     # Write message to user at chat box
                     self.main_ui.write_message("[Concord][Create]: Room already exists")
 
+            # TODO Passar a aceitar a resposta do comando \servers, onde vocês vão criar a lista de servidores
+            # TODO Se já houver uma, apague e crie uma mais atualizada com base no comando mais atual
+
         # Message didn't matched with regexp, just print it on screen
         else:
             self.main_ui.write_message(message)

@@ -157,6 +157,7 @@ class Server:
                 # Send back an acknowledgment passing all current connected clients
                 self.server_socket.sendto(bytes("\\ack{clients}".format(clients=re.sub(r",\s*\'socket\':\s*<(.*)>", "",
                                                                         str(self.clients))), "utf8"), eval(argument))
+                # TODO Enviar a lista de servidores online para todos os seus clientes, usando o comando \servers
             elif command == "ack":
                 # TODO: Criar o dicionario de clientes com o primeiro ack recebido (eval(argument)), reconstruir as salas a partir da informação dos clientes [campo room]
                 # TODO: Para os acks posteriores, salvar apenas o endereço do remetente na lista de servidores online
