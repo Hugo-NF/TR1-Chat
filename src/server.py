@@ -166,12 +166,12 @@ class Server:
                 print()
             #elif command == "no_answer":
 
-                # TODO check: Um servidor detectou a queda de outro (recebeu um cliente dele por meio de um reconnect)
+                # Um servidor detectou a queda de outro (recebeu um cliente dele por meio de um reconnect)
             #elif command == "reconnect":
 
-                # TODO check: Remova o endereço dele da lista (argument), a partir de agora, caso você receba um reconnect
+                # Remova o endereço dele da lista (argument), a partir de agora, caso você receba um reconnect
 
-                # TODO check: e o servidor do cliente não está lista de online, o no_answer não deve ser deflagrado
+                # e o servidor do cliente não está lista de online, o no_answer não deve ser deflagrado
                 print()
 
         # TODO: receber os comandos de usuario, de tal forma que seja possivel chamar as mesmas funções, como se fosse um cliente conectado (pode ser feito num regex match separado)

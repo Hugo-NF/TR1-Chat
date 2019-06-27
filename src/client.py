@@ -174,7 +174,7 @@ class Client:
                 proceed = self.treat_message(message)
             except OSError:  # Client has left
                 break
-            # TODO check: Colocar a exceção de conexão quebrada, apagar o servidor que você estava conectado da lista e enviar um \reconnect{'nick'} para outro servidor online
+            # Colocar a exceção de conexão quebrada, apagar o servidor que você estava conectado da lista e enviar um \reconnect{'nick'} para outro servidor online
             except ConnectionResetError:
                 # Reconnection
                 while True:
@@ -225,7 +225,7 @@ class Client:
             self.conn_ui.nicknameEdit.setDisabled(True)
             self.conn_ui.submitButton.setDisabled(True)
             self.main_ui.roomsButton.show()
-            # TODO Enviar um comando \servers para receber uma lista dos servidores online
+            # Enviar um comando \servers para receber uma lista dos servidores online
 
     def get_rooms(self):
         """
@@ -373,8 +373,8 @@ class Client:
                     # Write message to user at chat box
                     self.main_ui.write_message("[Concord][Create]: Room already exists")
 
-            # TODO Passar a aceitar a resposta do comando \servers, onde vocês vão criar a lista de servidores
-            # TODO Se já houver uma, apague e crie uma mais atualizada com base no comando mais atual
+            # Passar a aceitar a resposta do comando \servers, onde vocês vão criar a lista de servidores
+            # Se já houver uma, apague e crie uma mais atualizada com base no comando mais atual
 
         # Message didn't matched with regexp, just print it on screen
         else:
